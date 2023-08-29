@@ -144,7 +144,6 @@ export const getOffchainAuthKeys = async (address: string, provider: any) => {
 
   const client = await getClient();
   const domain = getDomain();
-  console.log(domain, 'domain');
 
   if (storageResStr) {
     const storageRes = JSON.parse(
@@ -158,19 +157,6 @@ export const getOffchainAuthKeys = async (address: string, provider: any) => {
   }
 
   const allSps = await getAllSps();
-  const selectedEndpoint = 'https://gf-stagenet-sp-b.bk.nodereal.cc';
-  const selectedSp = allSps.find((sp) =>
-    sp.endpoint.includes(selectedEndpoint),
-  );
-  console.log(selectedSp, 'selectedSp');
-  console.log({
-    sps: allSps,
-    chainId: GF_CHAIN_ID,
-    expirationMs: 5 * 24 * 60 * 60 * 1000,
-    domain,
-    address,
-  });
-
   const offchainAuthRes =
     await client.offchainauth.genOffChainAuthKeyPairAndUpload(
       {

@@ -157,7 +157,6 @@ export const ChannelDetail = () => {
 
             const provider = await connector?.getProvider();
             const offChainData = await getOffchainAuthKeys(address, provider);
-            console.log(offChainData, 'offchainData');
 
             if (!offChainData) {
               alert('No offchain, please create offchain pairs first');
@@ -165,13 +164,12 @@ export const ChannelDetail = () => {
             }
 
             const fileBytes = await file.arrayBuffer();
-            console.log((window as any).FileHandle);
             const hashResult = await (window as any).FileHandle.getCheckSums(
               new Uint8Array(fileBytes),
             );
-            const { contentLength, expectCheckSums } = hashResult;
+            // console.log('hashResult', hashResult);
 
-            console.log('hashResult', hashResult);
+            const { contentLength, expectCheckSums } = hashResult;
 
             const createObjectTx = await client.object.createObject(
               {
