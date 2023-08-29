@@ -4,6 +4,7 @@
   "private": true,
   "dependencies": {
     "@babel/core": "^7.16.0",
+    "@bnb-chain/greenfield-cosmos-types": "0.4.0-alpha.22",
     "@bnb-chain/greenfield-js-sdk": "0.2.4-alpha.23",
     "@bnb-chain/greenfiled-file-handle": "0.2.1-alpha.0",
     "@dopex-io/web3-multicall": "^0.1.9",
@@ -77,6 +78,7 @@
     "semver": "^7.3.5",
     "sha256": "^0.2.0",
     "source-map-loader": "^3.0.0",
+    "stream-browserify": "^3.0.0",
     "style-loader": "^3.3.1",
     "tailwindcss": "^3.0.2",
     "terser-webpack-plugin": "^5.2.5",

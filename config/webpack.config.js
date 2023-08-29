@@ -348,7 +348,7 @@ module.exports = function (webpackEnv) {
         zlib: false,
         http: false,
         https: false,
-        stream: false,
+        stream: require.resolve('stream-browserify'),
         crypto: false,
         url: false,
         buffer: false,
