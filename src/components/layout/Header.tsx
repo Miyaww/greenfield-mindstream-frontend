@@ -33,14 +33,11 @@ import {
   DepositIcon,
 } from '@totejs/icons';
 import { useNavigate } from 'react-router-dom';
-// import { useRevoke } from '../../hooks/useRevoke';
-// import { useHasRole } from '../../hooks/useHasRole';
 import Logo from '../../images/logo.png';
 import { BSCLogo } from '../svgIcon/BSCLogo';
 import { BSC_CHAIN_ID, GF_CHAIN_ID } from '../../env';
 import Search from '../../components/Search';
 import { ProfileModal } from '../modal/ProfileModal';
-import { set } from 'date-fns';
 import { useModal } from '../../hooks/useModal';
 import { useProfile } from '../../hooks/useProfile';
 
@@ -131,7 +128,7 @@ const Header = () => {
           alt="logo"
         />
         <Box>BNB Greenfield Mindstream</Box>
-        {/* <Search width="380px" height="40px"></Search> */}
+        <Search width="380px" height="40px"></Search>
       </LeftCon>
 
       <RightFunCon alignItems={'center'} justifyContent={'center'} gap={18}>
@@ -146,7 +143,7 @@ const Header = () => {
             >
               write blog
             </Button>
-            <Button
+            {/* <Button
               variant="text"
               onClick={() => {
                 if (!isConnecting && !isConnected) handleModalOpen();
@@ -155,7 +152,7 @@ const Header = () => {
               color="text.normal"
             >
               Create channel
-            </Button>
+            </Button> */}
           </>
         )}
         {address && (
@@ -249,11 +246,11 @@ const Header = () => {
                 <MenuElement
                   onClick={async (e: React.MouseEvent<HTMLElement>) => {
                     e.preventDefault();
-                    navigate('/profile?tab=purchase');
+                    navigate('/channelList');
                   }}
                 >
                   <DepositIcon mr={8} width={24} height={24} />
-                  My Purchases
+                  My Channels
                 </MenuElement>
                 {/* {hasRole && (
                           <MenuElement
@@ -296,7 +293,7 @@ const Header = () => {
     </HeaderFlex>
   );
 };
-
+//0xBB3aaCB333F05a30270747DeE1BBE8277001D0F6
 export default Header;
 
 const HeaderFlex = styled(Flex)`

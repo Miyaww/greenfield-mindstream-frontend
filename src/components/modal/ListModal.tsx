@@ -28,7 +28,6 @@ import {
   roundFun,
 } from '../../utils';
 import Web3 from 'web3';
-import { useCollectionItems } from '../../hooks/useCollectionItems';
 import { useModal } from '../../hooks/useModal';
 import Logo from '../../images/logo.png';
 import { Loader } from '../Loader';
@@ -61,8 +60,6 @@ export const ListModal = (props: ListModalProps) => {
   const { bucket_name, create_at, object_name } = detail;
 
   const name = object_name || bucket_name;
-
-  const { num } = useCollectionItems(bucket_name, false);
 
   const setValue = useDebounce(async (fn: any, val: string) => {
     fn?.(val);
@@ -149,12 +146,13 @@ export const ListModal = (props: ListModalProps) => {
                 </div>
               </FileInfo>
             ) : (
-              <ResourceNum gap={4}>
-                {num} Items <span style={{ color: '#979797' }}>created at</span>
-                {create_at ? (
-                  <CreateTime>{formatDateUTC(create_at * 1000)}</CreateTime>
-                ) : null}
-              </ResourceNum>
+              <></>
+              // <ResourceNum gap={4}>
+              //   {num} Items <span style={{ color: '#979797' }}>created at</span>
+              //   {create_at ? (
+              //     <CreateTime>{formatDateUTC(create_at * 1000)}</CreateTime>
+              //   ) : null}
+              // </ResourceNum>
             )}
           </BaseInfo>
         </InfoCon>

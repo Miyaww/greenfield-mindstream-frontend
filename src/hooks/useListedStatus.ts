@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { MarketPlaceContract } from '../base/contract/marketPlaceContract';
+import { MindStreamContract } from '../base/contract/mindStreamContract';
 
 export const useListedStatus = (groupId?: string) => {
   const { address } = useAccount();
@@ -12,7 +12,7 @@ export const useListedStatus = (groupId?: string) => {
   const checkListed = useCallback(
     async (groupId: string) => {
       if (groupId) {
-        const result = await MarketPlaceContract(false)
+        const result = await MindStreamContract(false)
           .methods.prices(groupId)
           .call({ from: address });
         if (result > 0) {

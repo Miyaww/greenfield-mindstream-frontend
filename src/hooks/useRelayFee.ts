@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
-import { MarketPlaceContract } from '../base/contract/marketPlaceContract';
+import { MindStreamContract } from '../base/contract/mindStreamContract';
 
 export const useRelayFee = () => {
   const [relayFee, setRelayFee] = useState(0);
 
   useEffect(() => {
-    MarketPlaceContract(false)
+    MindStreamContract(false)
       .methods.getMinRelayFee()
       .call()
       .then((result: any) => {

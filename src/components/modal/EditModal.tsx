@@ -9,7 +9,7 @@ import {
   ModalCloseButton,
   Button,
 } from '@totejs/uikit';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi';
 import { GF_CHAIN_ID } from '../../env';
 import { useChainBalance } from '../../hooks/useChainBalance';

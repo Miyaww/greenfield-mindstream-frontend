@@ -79,7 +79,7 @@ export const useResourceInfo = ({
 
       if (groupName && !groupId) {
         const res = await getGroupInfoByName(groupName, address);
-        groupId = res?.groupInfo?.id;
+        groupId = res?.id;
       }
 
       if (groupName && groupId) {
@@ -107,7 +107,7 @@ export const useResourceInfo = ({
       if (bucketName) {
         const groupName = generateGroupName(bucketName);
         const res = await getGroupInfoByName(groupName, address);
-        bucketListedId = res?.groupInfo?.id;
+        bucketListedId = res?.id;
         bucketListed = !!(await checkListed(bucketListedId as string));
       }
       // owner list

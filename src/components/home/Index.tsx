@@ -34,11 +34,12 @@ const HomeList = () => {
     <Container>
       <NavBar active={currentTab} onChange={handleTabChange} items={navItems} />
       <Box h={20} />
-      {/* {currentTab === Type.All ? (
+
+      {currentTab === Type.All ? (
         <AllList></AllList>
       ) : (
         <TrendingList></TrendingList>
-      )} */}
+      )}
     </Container>
   );
 };
@@ -47,6 +48,5 @@ export default HomeList;
 
 const Container = styled.div`
   margin-top: 30px;
-
   width: 1123px;
 `;

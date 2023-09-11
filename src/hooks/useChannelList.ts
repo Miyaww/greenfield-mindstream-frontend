@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
 import { getBucketList, getGroupInfoByName } from '../utils/gfSDK';
-import { DAPP_NAME } from '../env';
 import { getChannelName } from '../utils/string';
+import { generateGroupName } from '../utils';
 import { GF_CHAIN_ID } from '../env';
 export type BucketProps = {
   BucketInfo: {
@@ -25,12 +25,13 @@ export type BucketProps = {
   UpdateAt: string;
   UpdateTime: string;
   UpdateTxHash: string;
+  groupName: string;
+  groupId: number;
 };
-export const useChannelList = () => {
+export const useChannelList = (address: string) => {
   const [list, setList] = useState<BucketProps[]>();
   const [loading, setLoading] = useState(true);
   const [channelType, setChannelType] = useState<string[]>([]);
-  const { address } = useAccount();
   if (!address) return { loading, list };
   const PUBLIC_BUCKET_NAME = getChannelName(address, GF_CHAIN_ID, 'public');
   const PRIVATE_BUCKET_NAME = getChannelName(address, GF_CHAIN_ID, 'private');
@@ -49,17 +50,22 @@ export const useChannelList = () => {
                   item.BucketInfo.BucketName.indexOf(PRIVATE_BUCKET_NAME) > -1),
             );
             const res: any = await Promise.all(t);
-            setList(res);
-            res.map((item: BucketProps) => {
-              const { BucketInfo } = item;
-              const { BucketName } = BucketInfo;
-              if (BucketName.indexOf(PUBLIC_BUCKET_NAME) > -1) {
-                setChannelType((prev) => [...prev, 'public']);
-              }
-              if (BucketName.indexOf(PRIVATE_BUCKET_NAME) > -1) {
-                setChannelType((prev) => [...prev, 'private']);
-              }
-            });
+            const result = await Promise.all(
+              res.map(async (item: BucketProps) => {
+                const { BucketInfo } = item;
+                const { BucketName } = BucketInfo;
+                const groupName = generateGroupName(BucketName);
+                const res = await getGroupInfoByName(
+                  groupName,
+                  address as string,
+                );
+                if (res) {
+                  console.log(res.id);
+                  return { ...item, groupName, groupId: Number(res.id) };
+                }
+              }),
+            );
+            setList(result);
           } else {
             setLoading(false);
           }
@@ -72,5 +78,6 @@ export const useChannelList = () => {
         });
     }
   }, [address]);
+
   return { loading, list, channelType };
 };

@@ -30,6 +30,7 @@ const AllList = () => {
   const navigator = useNavigate();
   const { address } = useAccount();
   const { list, loading, total } = useGetListed(address, page, 10);
+  console.log(list);
 
   const state = useGlobal();
 
@@ -123,7 +124,7 @@ const AllList = () => {
       cell: (data: any) => {
         const { ownerAddress } = data;
         return (
-          <MyLink to={`/profile?address=${ownerAddress}`}>
+          <MyLink to={`/channelList?address=${ownerAddress}`}>
             {trimLongStr(ownerAddress)}
           </MyLink>
         );

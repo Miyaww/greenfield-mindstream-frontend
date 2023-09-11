@@ -14,7 +14,7 @@ export const initialState: IInitialState = {
   breadList: [
     {
       path: '/',
-      name: 'Data MarketPlace',
+      name: 'Mindstream',
       query: '',
     },
   ],

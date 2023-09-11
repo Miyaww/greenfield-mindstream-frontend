@@ -38,7 +38,7 @@ export const ProfileModal = (props: ListModalProps) => {
   const [_imgUrl, _setImgUrl] = useState('');
 
   const { switchNetwork } = useSwitchNetwork();
-  const { GfBalanceVal, BscBalanceVal } = useChainBalance();
+  const { BscBalanceVal } = useChainBalance();
 
   const { chain } = useNetwork();
   const { updateUserProfile } = useProfile();
@@ -67,7 +67,7 @@ export const ProfileModal = (props: ListModalProps) => {
 
   const BSC_FEE_SUFF = useMemo(() => {
     return BscBalanceVal >= LIST_ESTIMATE_FEE_ON_BSC;
-  }, [GfBalanceVal]);
+  }, [BscBalanceVal]);
 
   const reset = useCallback(() => {
     setName('');
@@ -138,37 +138,6 @@ export const ProfileModal = (props: ListModalProps) => {
         <Box h={32}></Box>
         <FeeCon flexDirection={'column'} justifyContent={'space-between'}>
           <BottomInfo>
-            {/* <Item alignItems={'center'} justifyContent={'space-between'}>
-              <ItemSubTittle>
-                Gas fee on Greenfield{' '}
-                <ColoredWarningIcon size="sm" color="#AEB4BC" />
-              </ItemSubTittle>
-              {loading ? (
-                <Loader
-                  style={{ width: '32px' }}
-                  size={32}
-                  minHeight={32}
-                ></Loader>
-              ) : (
-                <BalanceCon flexDirection={'column'} alignItems={'flex-end'}>
-                  <Fee>{simulateInfo?.gasFee || INITIATE_LIST_FEE} BNB</Fee>
-                  {GF_FEE_SUFF ? (
-                    <Balance>
-                      Greenfield Balance: {roundFun(GfBalanceVal, 8)} BNB{' '}
-                    </Balance>
-                  ) : (
-                    <BalanceWarn
-                      gap={5}
-                      alignItems={'center'}
-                      justifyContent={'center'}
-                    >
-                      <ColoredWarningIcon size="sm" color="#ff6058" />{' '}
-                      Insufficient Greenfield Balance
-                    </BalanceWarn>
-                  )}
-                </BalanceCon>
-              )}
-            </Item> */}
             <LineBox h={0.1}></LineBox>
             <Item alignItems={'center'} justifyContent={'space-between'}>
               <ItemSubTittle>
@@ -225,7 +194,7 @@ export const ProfileModal = (props: ListModalProps) => {
                 switchNetwork?.(BSC_CHAIN_ID);
               }}
             >
-              Switch to BSC to Start
+              Switch to BSC Testnet to Start
             </Button>
           ) : null}
         </FooterCon>

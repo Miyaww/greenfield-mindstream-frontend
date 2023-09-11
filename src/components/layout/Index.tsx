@@ -5,9 +5,9 @@ import styled from '@emotion/styled';
 import { Flex } from '@totejs/uikit';
 import { ListModal } from '../modal/ListModal';
 import { ListProcess } from '../modal/ListProcess';
-import { DelistModal } from '../modal/DelistModal';
 import { ActionResult } from '../modal/ActionResult';
 import { BuyIndex } from '../modal/buy/Index';
+
 import { useModal } from '../../hooks/useModal';
 import { useWalletModal } from '../../hooks/useWalletModal';
 import { WalletConnectModal } from '../wallet/WalletConnectModal';
@@ -71,13 +71,6 @@ export default function Layout({ children }: { children: ReactNode }) {
       )}
 
       <BuyIndex></BuyIndex>
-
-      <DelistModal
-        isOpen={openDelist}
-        handleOpen={() => {
-          handleDelistOpen();
-        }}
-      ></DelistModal>
 
       <ActionResult
         isOpen={openResult}

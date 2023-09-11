@@ -1,10 +1,7 @@
 import { useEffect, useState } from 'react';
 import {} from 'wagmi';
 import { getSps, getRandomSp } from '../utils/gfSDK';
-import { useAsyncEffect } from 'ahooks';
-import { set } from 'date-fns';
 import { SpItem } from '../utils/type';
-import { getClient } from '../base/client';
 
 export const useSP = () => {
   const [allSps, setAllSp] = useState<SpItem[]>([]);
@@ -16,14 +13,6 @@ export const useSP = () => {
     const sps = await getSps();
     return sps;
   };
-
-  // useAsyncEffect(async () => {
-  //   const client = await getClient();
-  //   const endpoint = await client.sp.getSPUrlByBucket(editDetail.bucket_name);
-  //   const primarySp = allSps.find(
-  //     (sp: SpItem) => sp.endpoint === endpoint,
-  //   ) as SpItem;
-  // }, []);
   useEffect(() => {
     setLoading(true);
     getStorageProviders()
@@ -43,6 +32,7 @@ export const useSP = () => {
     getRandomSp()
       .then(async (res) => {
         if (res) {
+          console.log(res, 'oneSp');
           setOneSp(res);
         }
       })

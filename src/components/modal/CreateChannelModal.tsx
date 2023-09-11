@@ -19,32 +19,42 @@ import {
   FormErrorMessage,
 } from '@totejs/uikit';
 import { useMemo, useState, useRef, useCallback } from 'react';
-import { useAccount, useNetwork, useSwitchNetwork, useBalance } from 'wagmi';
-import { GF_CHAIN_ID, BSC_CHAIN_ID } from '../../env';
+import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi';
+import { GF_CHAIN_ID } from '../../env';
 import { useChainBalance } from '../../hooks/useChainBalance';
 import { Loader } from '../Loader';
-import { defaultImg, divide10Exp, roundFun } from '../../utils';
+import { roundFun, generateGroupName, delay } from '../../utils';
 import { getDomain } from '../../utils/getDomain';
-import { BN } from 'bn.js';
-import { useBuy } from '../../hooks/useBuy';
 import { debounce, isEmpty } from 'lodash-es';
 import BigNumber from 'bignumber.js';
 import { useChannelList } from '../../hooks/useChannelList';
 import { useSP } from '../../hooks/useSP';
-import { useOffChainAuth } from '../../hooks/useOffChainAuth';
-import { selectSp, client, getAllSps } from '../../utils/gfSDK';
+import { useModal } from '../../hooks/useModal';
 import {
-  getSpOffChainData,
-  getOffchainAuthKeys,
-} from '../../utils/off-chain-auth';
+  client,
+  getAllSps,
+  selectSp,
+  CreateGroup,
+  getGroupInfoByName,
+  mirrorGroup,
+  multiTx,
+  putBucketPolicy,
+  putObjectPolicy,
+} from '../../utils/gfSDK';
+import { getOffchainAuthKeys } from '../../utils/off-chain-auth';
 import { getChannelName } from '../../utils/string';
-import { set } from 'date-fns';
+import {
+  ISimulateGasFee,
+  PermissionTypes,
+  GRNToString,
+  newGroupGRN,
+  newObjectGRN,
+} from '@bnb-chain/greenfield-js-sdk';
+import { OwnBuyContract } from '../../base/contract/ownBuyContract';
 
 interface ListModalProps {
   isOpen: boolean;
   handleOpen: (show: boolean) => void;
-  // detail: any;
-  // updateFn: () => void;
 }
 export type TNameFieldValue = {
   bucketName: string;
@@ -78,12 +88,19 @@ export const CreateChannelModal = (props: ListModalProps) => {
   const { isOpen, handleOpen } = props;
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState('pending');
-  const nonceRef = useRef(0);
+  const [simulateInfo, setSimulateInfo] = useState<ISimulateGasFee>();
+  const stateModal = useModal();
 
+  const nonceRef = useRef(0);
   const [type, setType] = useState<string>();
   const { address, connector } = useAccount();
   const { GfBalanceVal } = useChainBalance();
   const { switchNetwork } = useSwitchNetwork();
+  const { channelType } = useChannelList(address as string);
+  const [bucketName, setBucketName] = useState<string>('');
+  const [groupName, setGroupName] = useState<string>('');
+
+  const domain = getDomain();
   const onClose = () => {
     handleOpen(false);
     setStatus('pending');
@@ -116,17 +133,12 @@ export const CreateChannelModal = (props: ListModalProps) => {
 
     return false;
   }, [balance, validateNameAndGas.gas.value]);
-  const { channelType } = useChannelList();
-  const { oneSp } = useSP();
-  const domain = getDomain();
+
   const debounceValidate = debounce(async (value, curNonce) => {
     if (curNonce !== nonceRef.current) return;
-    if (!address || !oneSp || !type) return;
-
-    const types: { [key: string]: string } = {};
+    if (!address || !type) return;
     try {
-      const sps = await getAllSps();
-      const spInfo = sps.filter((item) => item.endpoint === oneSp)[0];
+      const spInfo = await selectSp();
       const provider = await connector?.getProvider();
       const offChainData = await getOffchainAuthKeys(address, provider);
       if (!offChainData) {
@@ -141,7 +153,7 @@ export const CreateChannelModal = (props: ListModalProps) => {
           visibility: 'VISIBILITY_TYPE_PUBLIC_READ',
           chargedReadQuota: '0',
           spInfo: {
-            primarySpAddress: spInfo.address,
+            primarySpAddress: spInfo.primarySpAddress,
           },
           paymentAddress: address,
         },
@@ -175,19 +187,22 @@ export const CreateChannelModal = (props: ListModalProps) => {
     }
     console.log(validateNameAndGas, status);
   }, 500);
-  const createBucket = async () => {
-    if (!address || !oneSp || !type) return;
+
+  const simulateTx = useCallback(async () => {
+    if (!address || !type) return;
     try {
-      const sps = await getAllSps();
-      const spInfo = sps.filter((item) => item.endpoint === oneSp)[0];
+      const spInfo = await selectSp();
       const provider = await connector?.getProvider();
       const offChainData = await getOffchainAuthKeys(address, provider);
       if (!offChainData) {
-        alert('No offchain, please create offchain pairs first');
+        console.log('No offchain, please create offchain pairs first');
         return;
       }
+      console.log(offChainData, 'offChainData');
       const bucketName = getChannelName(address, GF_CHAIN_ID, type);
-      console.log(offChainData, 'offchaindata', bucketName, 'bucketName');
+      setBucketName(bucketName);
+      console.log(bucketName, 'bucketName');
+      // create bucket
       const createBucketTx = await client.bucket.createBucket(
         {
           bucketName: bucketName,
@@ -195,7 +210,7 @@ export const CreateChannelModal = (props: ListModalProps) => {
           visibility: 'VISIBILITY_TYPE_PUBLIC_READ',
           chargedReadQuota: '0',
           spInfo: {
-            primarySpAddress: spInfo.address,
+            primarySpAddress: spInfo.primarySpAddress,
           },
           paymentAddress: address,
         },
@@ -206,38 +221,135 @@ export const CreateChannelModal = (props: ListModalProps) => {
           address,
         },
       );
+      // create group
+      const groupName = generateGroupName(bucketName);
+      console.log(groupName, 'groupName');
+      setGroupName(groupName);
+      const createGroupTx = await CreateGroup({
+        creator: address as string,
+        groupName: groupName,
+        members: [address as string],
+        extra: '',
+      });
+      // mirror group
+      const mirrorGroupTx = await mirrorGroup(
+        groupName,
+        '0',
+        address as string,
+      );
+      const statement: PermissionTypes.Statement = {
+        effect: PermissionTypes.Effect.EFFECT_ALLOW,
+        actions: [PermissionTypes.ActionType.ACTION_GET_OBJECT],
+        resources: [GRNToString(newObjectGRN(bucketName, '*'))],
+      };
 
-      const simulateInfo = await createBucketTx.simulate({
+      const principal = {
+        type: PermissionTypes.PrincipalType.PRINCIPAL_TYPE_GNFD_GROUP,
+        value: GRNToString(newGroupGRN(address as string, groupName)),
+      };
+      const policyTx = await putBucketPolicy(bucketName, {
+        operator: address,
+        statements: [statement],
+        principal,
+      });
+
+      const { simulate, broadcast } = await multiTx([
+        createBucketTx,
+        createGroupTx,
+        mirrorGroupTx,
+        policyTx,
+      ]);
+
+      const simulateMultiTxInfo = await simulate({
         denom: 'BNB',
       });
-      const res = await createBucketTx.broadcast({
+
+      setSimulateInfo(simulateMultiTxInfo);
+      console.log(simulateMultiTxInfo, 'simulateMultiTxInfo');
+      return { simulate, broadcast, simulateMultiTxInfo };
+    } catch (e: any) {
+      console.log('submit error', e);
+    }
+    return {};
+  }, [address, type]);
+  const broadcastTx = useCallback(async () => {
+    if (!address || !type) return;
+    let tmp = {};
+    try {
+      const simulateRes = await simulateTx();
+      console.log(simulateRes, 'simulateRes');
+      if (!simulateRes) return;
+      const { broadcast, simulateMultiTxInfo } = simulateRes;
+      const res = await broadcast?.({
         denom: 'BNB',
-        gasLimit: Number(simulateInfo?.gasLimit),
-        gasPrice: simulateInfo?.gasPrice || '5000000000',
+        gasLimit: Number(simulateMultiTxInfo.gasLimit) * 2,
+        gasPrice: simulateMultiTxInfo.gasPrice,
         payer: address,
         granter: '',
+        signTypedDataCallback: async (addr: string, message: string) => {
+          const provider = await connector?.getProvider();
+          return await provider?.request({
+            method: 'eth_signTypedData_v4',
+            params: [addr, message],
+          });
+        },
       });
 
-      if (res.code === 0) {
-        toast.success({
-          description: `Bucket created successfully!`,
-        });
-        setTimeout(() => {
-          setStatus('pending');
-          handleOpen(false);
-        }, 200);
-      } else {
-        toast.error({
-          description: `Bucket created failed!`,
-        });
+      const count = 60;
+      const t = new Array(count).fill(1);
+      let hasMirror = false;
+      let groupId;
+      for (const {} of t) {
+        if (!groupId) {
+          const groupResult = await getGroupInfo(groupName, address as string);
+          console.log(groupResult, 'groupResult');
+          groupId = groupResult?.groupInfo?.id;
+        }
+        hasMirror = await OwnBuyContract(false)
+          .methods.exists(Number(groupId))
+          .call({ from: address });
+        console.log(hasMirror, 'hasMirror');
+        if (hasMirror) {
+          break;
+        }
+        await delay(1);
       }
-      setLoading(false);
+
+      if (res?.code === 0 && hasMirror) {
+        stateModal.modalDispatch({
+          type: 'UPDATE_LIST_STATUS',
+          initListStatus: 1,
+          initListResult: res,
+        });
+      } else {
+        tmp = {
+          variant: res?.code !== 0 ? 'error' : 'success',
+          description: res?.code !== 0 ? 'Mirror failed' : 'Mirror pending',
+        };
+      }
+      return res;
     } catch (e: any) {
-      setStatus('failed');
-      console.log('submit error', e);
-      setStatus('pending');
+      tmp = {
+        variant: 'error',
+        description: e.message ? e.message : 'Mirror failed',
+      };
     }
-  };
+    stateModal.modalDispatch({
+      type: 'OPEN_RESULT',
+      result: tmp,
+    });
+    setLoading(false);
+  }, [address, type]);
+
+  const getGroupInfo = useCallback(
+    async (groupName: string, address: string): Promise<any> => {
+      const result = await getGroupInfoByName(groupName, address);
+      if (!result) return null;
+      return result;
+    },
+    [],
+  );
+
   const checkGasFee = useCallback(
     (type: string) => {
       setValidateNameAndGas(initValidateNameAndGas);
@@ -248,6 +360,16 @@ export const CreateChannelModal = (props: ListModalProps) => {
     },
     [debounceValidate],
   );
+  const createChannel = useCallback(async () => {
+    if (address) {
+      setLoading(true);
+      try {
+        await broadcastTx();
+      } catch (error) {
+        // Handle the error
+      }
+    }
+  }, [type, address]);
   return (
     <Container
       size={'lg'}
@@ -304,9 +426,6 @@ export const CreateChannelModal = (props: ListModalProps) => {
                   <ColoredWarningIcon size="sm" color="#AEB4BC" />
                 </ItemSubTittle>
                 <BalanceCon flexDirection={'column'} alignItems={'flex-end'}>
-                  {/* {status === 'operating' ? (
-                    <Loader size={24}></Loader>
-                  ) : ( */}
                   <>
                     <Fee>
                       {validateNameAndGas?.gas.value?.dp(8).toString() || '-'}{' '}
@@ -328,7 +447,6 @@ export const CreateChannelModal = (props: ListModalProps) => {
                       </BalanceWarn>
                     )}
                   </>
-                  {/* )} */}
                 </BalanceCon>
               </Item>
             </BottomInfo>
@@ -339,7 +457,7 @@ export const CreateChannelModal = (props: ListModalProps) => {
             <Button
               w="100%"
               variant="brand"
-              onClick={() => createBucket()}
+              onClick={() => createChannel()}
               disabled={disableCreateButton()}
               justifyContent="center"
             >
@@ -443,6 +561,7 @@ const InputCon = styled.div`
 `;
 const FeeCon = styled(Flex)`
   padding: 16px;
+  margin-top: 20px;
 
   width: 100%;
   height: 75px;

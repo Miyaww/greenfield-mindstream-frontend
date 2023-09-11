@@ -125,7 +125,19 @@ export const parseGroupName = (groupName: string) => {
     bucketName,
   };
 };
-
+export const parseGroupNameNoType = (groupName: string) => {
+  let name = groupName;
+  let bucketName = '';
+  if (name.indexOf(`${DAPP_NAME}_`) === 0) {
+    const temp = name.split('_');
+    name = temp.slice(-1)[0];
+    bucketName = temp[2];
+  }
+  return {
+    name,
+    bucketName,
+  };
+};
 export const defaultImg = (name: string, width: number) => {
   if (!name) return '';
   const sha = sha265(name);
@@ -171,6 +183,8 @@ export const contentTypeToExtension = (contentType = '', fileName?: string) => {
       return 'XLSX';
     case 'text/plain':
       return 'TXT';
+    case 'text/markdown':
+      return 'MD';
     case 'application/zip':
       return 'ZIP';
     case 'application/octet-stream':

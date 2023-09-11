@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { MarketPlaceContract } from '../base/contract/marketPlaceContract';
+import { MindStreamContract } from '../base/contract/mindStreamContract';
 
 export const useSalesVolumeList = () => {
   const [list, setList] = useState([]);
@@ -12,7 +12,7 @@ export const useSalesVolumeList = () => {
   const { address } = useAccount();
 
   useEffect(() => {
-    MarketPlaceContract(false)
+    MindStreamContract(false)
       .methods.getSalesVolume(0, 20)
       .call({ from: address })
       .then((result: any) => {

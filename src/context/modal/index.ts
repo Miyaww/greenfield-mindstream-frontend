@@ -6,10 +6,13 @@ export const initialState: any = {
   openListProcess: false,
   openBuy: false,
   buying: false,
+  openUpload: false,
+  uploading: false,
   openDelist: false,
   openResult: false,
   openCreateChannel: false,
   openEditProfile: false,
+  openSubModal: false,
   channelList: [],
   listData: {},
   buyData: {},
@@ -19,6 +22,7 @@ export const initialState: any = {
   initListStatus: 0,
   initListResult: {},
   profile: {},
+  subItem: {},
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   callBack: () => {},
 };
@@ -31,18 +35,22 @@ export interface ModalState {
     openListProcess: boolean;
     openBuy: boolean;
     buying: boolean;
+    openUpload: boolean;
+    uploading: boolean;
     listData: object;
     buyData: object;
     initInfo: object;
     initListStatus: number;
     initListResult: object;
     openDelist: boolean;
+    openSubModal: boolean;
     delistData: object;
     openResult: boolean;
     openCreateChannel: boolean;
     channelList: [];
     openEditProfile: boolean;
     profile: object;
+    subItem: object;
     result: {
       variant: StateModalVariantType;
       description: string;
@@ -156,6 +164,14 @@ export const ModalReducer = (initialState: any, action: any) => {
       };
     case 'CLOSE_PROFILE':
       return { ...initialState, openEditProfile: false };
+    case 'OPEN_SUB_MODAL':
+      return {
+        ...initialState,
+        openSubModal: true,
+        subItem: action.subItem,
+      };
+    case 'CLOSE_SUB_MODAL':
+      return { ...initialState, openSubModal: false };
     default:
       return initialState;
   }

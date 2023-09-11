@@ -29,6 +29,9 @@ export interface IList {
   extra: string;
 }
 export const useList = (props: IList) => {
+  //create bucket
+  //mirror bucket
+  //is listed ?
   const [simulateInfo, setSimulateInfo] = useState<ISimulateGasFee>();
   const [loading, setLoading] = useState(false);
   const { address, connector } = useAccount();
@@ -108,10 +111,7 @@ export const useList = (props: IList) => {
     [groupName, extra, address],
   );
   const getGroupInfo = useCallback(
-    async (
-      groupName: string,
-      address: string,
-    ): Promise<QueryHeadGroupResponse | null> => {
+    async (groupName: string, address: string): Promise<any> => {
       const result = await getGroupInfoByName(groupName, address);
       if (!result) return null;
       return result;

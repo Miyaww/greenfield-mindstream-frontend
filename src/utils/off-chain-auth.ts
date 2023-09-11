@@ -5,6 +5,7 @@ import { GF_CHAIN_ID } from '../env';
 import { getDomain } from './getDomain';
 import { all } from 'axios';
 import { getClient } from '../base/client';
+import { toast } from '@totejs/uikit';
 
 const isEmpty = (obj: object) => {
   return Object.keys(obj).length === 0;
@@ -150,10 +151,13 @@ export const getOffchainAuthKeys = async (address: string, provider: any) => {
       storageResStr,
     ) as IReturnOffChainAuthKeyPairAndUpload;
     if (storageRes.expirationTime < Date.now()) {
-      alert('Your auth key has expired, please generate a new one');
-      return;
+      localStorage.removeItem(key);
+      toast.info({
+        description: 'Your auth key has expired, please generate a new one',
+      });
+      // return;
     }
-    return storageRes;
+    // return storageRes;
   }
 
   const allSps = await getAllSps();

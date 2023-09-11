@@ -70,7 +70,7 @@ export const multiTx = async (list: any) => {
 export const getBucketList = async (address: string) => {
   // const client = await getClient();
   const endpoint = await getRandomSp();
-  const bucketList = client.bucket.getUserBuckets({
+  const bucketList = await client.bucket.getUserBuckets({
     address,
     endpoint,
   });
@@ -152,10 +152,10 @@ export const getGroupInfoByName = async (
 ) => {
   const client = await getClient();
   try {
-    const res = await client.group.headGroup(groupName, groupOwner);
-    return res;
+    const { groupInfo } = await client.group.headGroup(groupName, groupOwner);
+    console.log(groupInfo, 'getGroupInfoByName');
+    return groupInfo;
   } catch (e) {
-    console.log(e);
     return null;
   }
 };
@@ -195,7 +195,14 @@ export const headGroupNFT = async (tokenId: string) => {
     return {};
   }
 };
-
+export const headGroup = async (groupName: string, address: string) => {
+  const client = await getClient();
+  try {
+    return await client.group.headGroup(groupName, address);
+  } catch (e) {
+    return {};
+  }
+};
 export const getObjectInfo = async (objectId: string) => {
   const client = await getClient();
 

@@ -7,16 +7,15 @@ import { bscTestnet } from 'wagmi/chains';
 import Layout from './components/layout/Index';
 import Home from './pages/Home';
 import Profile from './pages/Profile';
-import { Edit } from './pages/Edit';
 import { ChannelDetail } from './pages/ChannelDetail';
-import Resource from './pages/Resource';
-import Folder from './pages/Folder';
+import { FileDetail } from './pages/FileInfo';
 import { theme } from './theme';
 import { Route, Routes, HashRouter } from 'react-router-dom';
 import { ModalProvider } from './context/modal';
 import { GlobalProvider } from './context/global';
 import { WalletModalProvider } from './context/walletModal';
 import { OffChainAuthProvider } from './context/offchainAuthContext';
+import { EditObject } from './components/object/Edit';
 
 import './base/global.css';
 
@@ -46,24 +45,20 @@ const routes: Array<IRoute> = [
     element: <Home></Home>,
   },
   {
-    path: '/profile',
+    path: '/channelList',
     element: <Profile></Profile>,
   },
   {
     path: '/edit',
-    element: <Edit></Edit>,
+    element: <EditObject></EditObject>,
   },
   {
     path: '/channel',
     element: <ChannelDetail></ChannelDetail>,
   },
   {
-    path: '/resource',
-    element: <Resource></Resource>,
-  },
-  {
-    path: '/folder',
-    element: <Folder></Folder>,
+    path: '/file',
+    element: <FileDetail></FileDetail>,
   },
 ];
 
@@ -123,25 +118,6 @@ function App() {
           },
         },
       }),
-      // new CoinbaseWalletConnector({
-      //   chains,
-      //   options: {
-      //     appName: 'ComboScan',
-      //   },
-      // }),
-      // new WalletConnectConnector({
-      //   chains,
-      //   options: {
-      //     projectId: '...',
-      //   },
-      // }),
-      // new InjectedConnector({
-      //   chains,
-      //   options: {
-      //     name: 'Injected',
-      //     shimDisconnect: true,
-      //   },
-      // }),
     ],
     provider,
     logger: {

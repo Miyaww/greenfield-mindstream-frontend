@@ -36,7 +36,7 @@ const Home = () => {
         </Info>
       </BannerInfo> */}
       <HomeList></HomeList>
-      <WorkInfo flexDirection={'column'} gap={37}>
+      {/* <WorkInfo flexDirection={'column'} gap={37}>
         <WorkMainTitle>How it works</WorkMainTitle>
         <WorkItem flexDirection={'column'} gap={20}>
           <WorkTitle>Backendless Framework </WorkTitle>
@@ -70,7 +70,7 @@ const Home = () => {
             complete data listing and trading in seconds.
           </WorkDesc>
         </WorkItem>
-      </WorkInfo>
+      </WorkInfo> */}
       <Cards
         alignItems={'center'}
         justifyContent={'center'}

@@ -6,7 +6,7 @@ import { Box, Flex } from '@totejs/uikit';
 import ScrollSelect from './ScrollSelect';
 import { useDebounce } from '../hooks/useDebounce';
 import { searchKey } from '../utils/gfSDK';
-import { parseGroupName } from '../utils';
+import { parseGroupNameNoType } from '../utils';
 import { multiCallFun } from '../base/contract/multiCall';
 import { MarketPlaceContract } from '../base/contract/marketPlaceContract';
 import Web3 from 'web3';
@@ -15,7 +15,7 @@ const Group = (props: any) => {
   const {
     group: { group_name },
   } = props;
-  const { name } = parseGroupName(group_name);
+  const { name } = parseGroupNameNoType(group_name);
   return <div>{name}</div>;
 };
 
@@ -55,13 +55,9 @@ const Search = (props: ISearch) => {
           const {
             group: { group_name },
           } = item;
-          const { bucketName, name, type } = parseGroupName(group_name);
+          const { bucketName } = parseGroupNameNoType(group_name);
           const reg = new RegExp(searchValue, 'g');
-          if (type === 'Collection') {
-            return reg.test(bucketName);
-          } else {
-            return reg.test(name);
-          }
+          return reg.test(bucketName);
         });
         if (groups.length) {
           const res = await multiCallFun(
@@ -123,7 +119,7 @@ const Search = (props: ISearch) => {
           return <div>{item}</div>;
         },
         link: (item: string) => {
-          return `profile?address=${item}`;
+          return `channelList?address=${item}`;
         },
       };
       list.forEach((d: any) => {
@@ -133,13 +129,13 @@ const Search = (props: ISearch) => {
           const {
             group: { group_name },
           } = d;
-          const { type } = parseGroupName(group_name);
-          if (type === 'Collection') {
-            collectionList.list.push(d as never);
-          }
-          if (type === 'Data') {
-            dataList.list.push(d as never);
-          }
+          // const { type } = parseGroupNameNoType(group_name);
+          // if (type === 'Collection') {
+          //   collectionList.list.push(d as never);
+          // }
+          // if (type === 'Data') {
+          //   dataList.list.push(d as never);
+          // }
         }
       });
       return [collectionList, dataList, addressList];

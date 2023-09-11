@@ -3,7 +3,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { MarketPlaceContract } from '../base/contract/marketPlaceContract';
+import { MindStreamContract } from '../base/contract/mindStreamContract';
 import { headGroupNFT } from '../utils/gfSDK';
 import { parseGroupName } from '../utils';
 
@@ -14,10 +14,11 @@ export const useTrendingList = () => {
   const { address } = useAccount();
 
   useEffect(() => {
-    MarketPlaceContract(false)
+    MindStreamContract(false)
       .methods.getSalesVolumeRanking()
       .call({ from: address })
       .then(async (result: any) => {
+        console.log(result);
         const { _ids, _dates, _volumes } = result;
         if (Array.isArray(_ids)) {
           const t = _ids

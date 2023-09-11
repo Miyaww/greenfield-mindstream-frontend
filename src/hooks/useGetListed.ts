@@ -3,7 +3,7 @@
 
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { MarketPlaceContract } from '../base/contract/marketPlaceContract';
+import { MindStreamContract } from '../base/contract/mindStreamContract';
 import { headGroupNFT } from '../utils/gfSDK';
 import { parseGroupName } from '../utils';
 
@@ -20,10 +20,12 @@ export const useGetListed = (realAddress?: string, page = 0, pageSize = 10) => {
 
   const getList = useCallback(async () => {
     setLoading(true);
-    const list = await MarketPlaceContract(false)
-      .methods.getListed((page - 1) * pageSize, pageSize)
+    const list = await MindStreamContract(false)
+      .methods.getUsersInfo((page - 1) * pageSize, pageSize)
       .call();
+    console.log(list);
     const { _ids, _dates, _totalLength } = list;
+    const { _addrs, _settings } = list;
     if (Array.isArray(_ids)) {
       const t = _ids.map((item: any) => {
         return headGroupNFT(item);
