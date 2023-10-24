@@ -7,11 +7,12 @@ import {
   Button,
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
+  toast,
+  Badge,
 } from '@totejs/uikit';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { useChannelList, BucketProps } from '../../hooks/useChannelList';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { trimLongStr } from '../../utils';
 import { useAccount } from 'wagmi';
 import { Copy } from '../../components/Copy';
@@ -22,27 +23,155 @@ import { useGlobal } from '../../hooks/useGlobal';
 import CollNoData from '../../components/profile/CollNoData';
 import { useMemo } from 'react';
 import { useModal } from '../../hooks/useModal';
+import { useAsyncEffect } from 'ahooks';
+import { OwnBuyContract } from '../../base/contract/ownBuyContract';
+import { client } from '../../utils/gfSDK';
+import { useApprove } from '../../hooks/useApprove';
+import { useHasRole } from '../../hooks/useHasRole';
+import { useUserSetting } from '../../hooks/useUserSetting';
+import { checkAddressInGroup } from '../../utils/gfSDK';
+import dayjs from 'dayjs';
 
 const ChannelList = () => {
   const [p] = useSearchParams();
   const navigate = useNavigate();
   const state = useGlobal();
   const [breadItems, setBreadItems] = useState<any>([]);
-  const { address: realAddress } = useAccount();
+  const { address: realAddress, connector } = useAccount();
   const [open, setOpen] = useState(false);
-  const [openCharge, setOpenCharge] = useState(false);
+  const [openUpSub, setOpenCharge] = useState(false);
   const [openSub, setOpenSub] = useState(false);
-  const [price, setPrice] = useState();
+  const { hasOpenUpSub } = useUserSetting();
+  const [tableData, setTableData] = useState<BucketProps[]>();
+  const [expiration, setExpiration] = useState<string>('');
+
+  const { Approve } = useApprove();
+  const { hasRole, setHasRole, loading: roleLoading } = useHasRole();
+  // -1 do not login
+  // 0 owner
+  // 1 Waiting for purchase
+  // 2 purchase
 
   const address = p.get('address') || realAddress;
   const { list, loading: listLoading } = useChannelList(address as string);
+  const getUserStatus = useCallback(
+    async (groupName: string, groupOwner: string, realAddress: string) => {
+      if (!realAddress) return -1;
+      console.log(realAddress, groupOwner);
+      if (realAddress === groupOwner) {
+        return 0;
+      }
+      try {
+        const result = await checkAddressInGroup(
+          groupName,
+          groupOwner,
+          realAddress,
+        );
+        if (result) {
+          const { groupMember } = result;
+          const { expirationTime } = groupMember;
+          if (expirationTime) {
+            const seconds = expirationTime.seconds.low;
+            const nanos = expirationTime.nanos;
+
+            const milliseconds = seconds * 1000 + nanos / 1e6;
+            const date = dayjs(milliseconds).format('YYYY-MM-DD HH:mm');
+            console.log(JSON.stringify(date), 'expirationTime');
+            setExpiration(date);
+          }
+          return 2;
+        } else {
+          return 1;
+        }
+      } catch (error) {
+        return -1;
+      }
+    },
+    [],
+  );
+
+  const handleCheckRole = useCallback(
+    async (data: any) => {
+      if (roleLoading) return;
+      console.log(hasRole, 'hasRole');
+      if (hasRole) {
+        handleOpenChargeModal(data);
+      } else {
+        const res = await Approve(data.groupId);
+      }
+    },
+    [roleLoading, hasRole],
+  );
+
+  useAsyncEffect(async () => {
+    if (list) {
+      console.log(list);
+      const updatedList = await Promise.all(
+        list.map(async (item) => {
+          const { groupId, groupName } = item;
+
+          const hasMirror = await OwnBuyContract(false)
+            .methods.exists(Number(groupId))
+            .call({ from: realAddress });
+
+          console.log(hasMirror, 'hasMirror');
+
+          if (!address || !groupId) return item;
+
+          if (!hasMirror) {
+            const mirrorGroupTx = await client.crosschain.mirrorGroup({
+              groupName: '',
+              id: groupId.toString(),
+              operator: address,
+              destChainId: 97,
+            });
+
+            const simulateInfo = await mirrorGroupTx.simulate({
+              denom: 'BNB',
+            });
+
+            console.log(simulateInfo);
+
+            const res = await mirrorGroupTx.broadcast({
+              denom: 'BNB',
+              gasLimit: Number(simulateInfo.gasLimit),
+              gasPrice: simulateInfo.gasPrice,
+              payer: address,
+              granter: '',
+              signTypedDataCallback: async (addr: string, message: string) => {
+                const provider = await connector?.getProvider();
+                return await provider?.request({
+                  method: 'eth_signTypedData_v4',
+                  params: [addr, message],
+                });
+              },
+            });
+
+            if (res) {
+              toast.info({ description: 'mirror group' });
+            }
+          }
+          const status = await getUserStatus(
+            groupName,
+            address,
+            realAddress as string,
+          );
+          console.log(status, 'status');
+
+          return { ...item, status };
+        }),
+      );
+
+      setTableData(updatedList);
+    }
+  }, [list, address, realAddress]);
 
   const modalData = useModal();
 
   const showNoData = useMemo(() => {
-    const show = !listLoading && !list?.length;
+    const show = !listLoading && !tableData?.length && address;
     return show;
-  }, [listLoading, list]);
+  }, [listLoading, list, tableData, address]);
 
   const handleOpenChargeModal = (data: BucketProps) => {
     if (!data) return;
@@ -61,18 +190,6 @@ const ChannelList = () => {
     setOpenSub(true);
   };
 
-  useEffect(() => {
-    const list = state.globalState.breadList;
-    setBreadItems(
-      list.concat([
-        {
-          name: 'channel',
-          query: '',
-          path: '',
-        },
-      ]),
-    );
-  }, [state.globalState.breadList]);
   const columns = [
     {
       header: 'Channel',
@@ -97,16 +214,15 @@ const ChannelList = () => {
     {
       header: 'Action',
       cell: (data: BucketProps) => {
-        const { BucketInfo } = data;
+        const { BucketInfo, status } = data;
         const { BucketName, Id, Owner } = BucketInfo;
         return (
-          <Box>
+          <Flex>
             <UILink
               _hover={{ cursor: 'pointer' }}
               onClick={() => {
-                const list = state.globalState.breadList;
                 const item = {
-                  path: '/channel',
+                  path: '/channelInfo',
                   name: BucketName,
                   query: p.toString(),
                 };
@@ -120,31 +236,40 @@ const ChannelList = () => {
                     bucketId: Id,
                     address,
                     groupName: data.groupName,
+                    groupId: data.groupId,
                   },
                 });
               }}
             >
-              view
+              View
             </UILink>
-            {BucketName.includes('private') && Owner === address && (
+            {BucketName.includes('private') && Owner === realAddress && (
               <UILink
                 _hover={{ cursor: 'pointer' }}
                 ml={12}
-                onClick={() => handleOpenChargeModal(data)}
+                onClick={() => handleCheckRole(data)}
               >
-                charge
+                {hasOpenUpSub ? 'Set Price' : 'Open Up Subscribe'}
               </UILink>
             )}
-            {BucketName.includes('private') && Owner !== address && (
+            {BucketName.includes('private') && status === 1 && (
               <UILink
                 _hover={{ cursor: 'pointer' }}
                 ml={12}
                 onClick={() => handleOpenSubModal(data)}
               >
-                subscribe
+                Subscribe
               </UILink>
             )}
-          </Box>
+            {BucketName.includes('private') && status === 2 && (
+              <Flex>
+                <Badge ml={12} colorScheme="success">
+                  Subscribe
+                </Badge>
+                <Box fontSize={12}>expire at {expiration}</Box>
+              </Flex>
+            )}
+          </Flex>
         );
       },
     },
@@ -199,9 +324,10 @@ const ChannelList = () => {
               setOpen(false);
             }}
           />
-          {openCharge && (
+          {openUpSub && (
             <OpenSubModal
-              isOpen={openCharge}
+              isOpen={openUpSub}
+              type={hasOpenUpSub ? 'SET_PRICE' : 'OPEN_UP'}
               handleOpen={() => {
                 setOpenCharge(false);
               }}
@@ -219,7 +345,7 @@ const ChannelList = () => {
           {showNoData ? (
             <CollNoData />
           ) : (
-            <Table columns={columns} data={list}></Table>
+            <Table columns={columns} data={tableData}></Table>
           )}
         </Container>
       )}

@@ -5,7 +5,6 @@ import styled from '@emotion/styled';
 import { getUtcZeroTimestamp } from '@bnb-chain/greenfield-js-sdk';
 import { EditObject } from '../components/object/Edit';
 import { FileInfo } from '../components/object/Info';
-import { useNavigate, useSearchParams } from 'react-router-dom';
 
 export const FileDetail = () => {
   return (

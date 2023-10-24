@@ -1,12 +1,13 @@
 import { StateModalVariantType } from '@totejs/uikit';
 import React from 'react';
+import { IGroupItem } from '../../base/type';
 
 export const initialState: any = {
   openList: false,
   openListProcess: false,
   openBuy: false,
   buying: false,
-  openUpload: false,
+  openSub: false,
   uploading: false,
   openDelist: false,
   openResult: false,
@@ -18,6 +19,12 @@ export const initialState: any = {
   buyData: {},
   initInfo: {},
   delistData: {},
+  selectedGroup: {},
+  activeGroup: {
+    groupName: '',
+    groupId: '',
+    ownerAddress: '',
+  },
   result: {},
   initListStatus: 0,
   initListResult: {},
@@ -35,7 +42,7 @@ export interface ModalState {
     openListProcess: boolean;
     openBuy: boolean;
     buying: boolean;
-    openUpload: boolean;
+    openSub: boolean;
     uploading: boolean;
     listData: object;
     buyData: object;
@@ -51,6 +58,9 @@ export interface ModalState {
     openEditProfile: boolean;
     profile: object;
     subItem: object;
+    selectedChannelList: object;
+    selectedChannel: object;
+    activeGroup: IGroupItem;
     result: {
       variant: StateModalVariantType;
       description: string;
@@ -99,8 +109,21 @@ export const ModalReducer = (initialState: any, action: any) => {
         ...initialState,
         openChannelProcess: false,
       };
-    case 'UPDATE_CHANNEL_DATA':
-      return { ...initialState, channelData: action.channelData };
+    case 'SET_ACTIVE_CHANNEL_LIST':
+      return {
+        ...initialState,
+        selectedChannelList: action.selectedChannelList,
+      };
+    case 'SET_ACTIVE_GROUP':
+      return {
+        ...initialState,
+        activeGroup: action.activeGroup,
+      };
+    case 'SET_ACTIVE_CHANNEL':
+      return {
+        ...initialState,
+        selectedChannel: action.selectedChannel,
+      };
     case 'UPDATE_CHANNEL_STATUS':
       return {
         ...initialState,

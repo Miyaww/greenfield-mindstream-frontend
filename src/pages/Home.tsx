@@ -134,7 +134,8 @@ export default Home;
 const Container = styled(Flex)`
   margin-top: -80px;
   width: 100%;
-  background-color: #1e2026;
+  /* background-color: #333333; */
+  background-color: ${(props: any) => props.theme.colors.bg.primary};
 `;
 
 const BannerInfo = styled.div`
@@ -254,11 +255,11 @@ const CardItem = styled(Flex)`
     color: #fff;
   }
   &:hover {
-    background-color: #fff;
+    background-color: '#cccccc';
 
     .icon {
       margin-top: 22.3px;
-      color: #aeafb0;
+      color: #535458;
     }
     .title {
       color: #535458;

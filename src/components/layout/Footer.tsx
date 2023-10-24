@@ -17,7 +17,7 @@ const Footer = () => {
 export default Footer;
 
 const FooterCon = styled(Flex)`
-  color: #aeafb0;
+  color: #ffffff;
   height: 48px;
-  background-color: #000000;
+  background-color: #333333;
 `;

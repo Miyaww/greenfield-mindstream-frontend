@@ -8,6 +8,7 @@ import {
   Textarea,
   FormControl,
   FormLabel,
+  FormErrorMessage,
   LightMode,
 } from '@totejs/uikit';
 import {
@@ -26,16 +27,17 @@ import {
   BSC_SEND_GAS_FEE,
 } from '../../env';
 import { useChainBalance } from '../../hooks/useChainBalance';
-import { useEdit } from '../../hooks/useEdit';
-import { Loader } from '../Loader';
 import { roundFun } from '../../utils';
 import { useModal } from '../../hooks/useModal';
 import { MindStreamContract } from '../../base/contract/mindStreamContract';
+import Web3 from 'web3';
+import { useUserSetting } from '../../hooks/useUserSetting';
 
 interface SubModalProps {
   isOpen: boolean;
   handleOpen: (show: boolean) => void;
   updateFn?: () => void;
+  type: 'OPEN_UP' | 'SET_PRICE';
 }
 interface PriceData {
   month: number;
@@ -44,14 +46,15 @@ interface PriceData {
 }
 
 export const OpenSubModal = (props: SubModalProps) => {
-  const { isOpen, handleOpen } = props;
+  const { isOpen, handleOpen, type } = props;
 
   const [loading, setLoading] = useState(false);
   const modalData = useModal();
-  const { subItem }: { subItem: any } = modalData.modalState;
-  console.log(subItem, 'sub');
-  const { BucketInfo, groupId } = subItem;
-  const { BucketName: bucketName } = BucketInfo;
+  const { activeGroup } = modalData.modalState;
+  const [error, setError] = useState('');
+  const { groupId } = activeGroup;
+
+  const { currentUserPrices, loading: userSettingLoading } = useUserSetting();
 
   const { switchNetwork } = useSwitchNetwork();
   const { BscBalanceVal } = useChainBalance();
@@ -63,40 +66,66 @@ export const OpenSubModal = (props: SubModalProps) => {
     threeMonths: 0,
     year: 0,
   });
-  const onClose = () => {
-    reset();
-    handleOpen(false);
-  };
+  useEffect(() => {
+    if (userSettingLoading) return;
+    console.log(currentUserPrices, 'currentUserPrices');
+    if (currentUserPrices && currentUserPrices.length > 0) {
+      setPrices({
+        month: Number(Web3.utils.fromWei(currentUserPrices[0], 'ether')),
+        threeMonths: Number(Web3.utils.fromWei(currentUserPrices[1], 'ether')),
+        year: Number(Web3.utils.fromWei(currentUserPrices[2], 'ether')),
+      });
+    }
+  }, [currentUserPrices, userSettingLoading]);
+
   const handleConfirm = useCallback(async () => {
     if (groupId) {
       setLoading(true);
       const price = Object.values(prices);
-      const result = await MindStreamContract(false)
-        .methods.openUpSubscribeChannel(groupId, price)
-        .send({ from: address, gasPrice: BSC_SEND_GAS_FEE });
-      if (result > 0) {
-        console.log(result);
+      const params = price.map((item) =>
+        Web3.utils.toWei(item.toString(), 'ether'),
+      );
+      let result;
+      if (type === 'OPEN_UP') {
+        result = await MindStreamContract(true)
+          .methods.openUpSubscribeChannel(groupId, params)
+          .send({ from: address, gasPrice: BSC_SEND_GAS_FEE });
+      } else {
+        result = await MindStreamContract(true)
+          .methods.setPrice(params)
+          .send({ from: address, gasPrice: BSC_SEND_GAS_FEE });
+      }
+
+      if (result) {
+        setLoading(false);
+        reset();
+        toast.success({ description: 'Open Up Subscribe Success' });
         return result;
       }
     }
-  }, []);
+  }, [prices]);
 
   const handlePriceChange = (
     event: React.ChangeEvent<HTMLInputElement>,
     type: keyof PriceData,
   ) => {
+    setLoading(true);
+    setError('');
     setPrices((prevPrices) => ({
       ...prevPrices,
       [type]: Number(event.target.value),
     }));
+    setLoading(false);
   };
-  const handleSubmit = (event: any) => {
-    event.preventDefault();
-
+  const handleSubmit = () => {
     // Validate that all prices are provided
     const { month, threeMonths, year } = prices;
+
     if (month === 0 || threeMonths === 0 || year === 0) {
-      alert('Please provide all prices.');
+      console.log(month, threeMonths, year);
+
+      setError('Please provide all prices, and prices cannot be 0');
+      // reset();
       return;
     }
 
@@ -104,7 +133,7 @@ export const OpenSubModal = (props: SubModalProps) => {
     console.log('Prices:', prices);
 
     // Close the modal
-    onClose();
+    handleConfirm();
   };
   const BSC_FEE_SUFF = useMemo(() => {
     return BscBalanceVal >= LIST_ESTIMATE_FEE_ON_BSC;
@@ -113,11 +142,13 @@ export const OpenSubModal = (props: SubModalProps) => {
   //subscribe charge 1 month, 3 months, and 1 year at different prices.
 
   const reset = useCallback(() => {
+    handleOpen(false);
     setPrices({
       month: 0,
       threeMonths: 0,
       year: 0,
     });
+    setError('');
   }, []);
 
   return (
@@ -130,14 +161,14 @@ export const OpenSubModal = (props: SubModalProps) => {
       closeOnOverlayClick={false}
     >
       <ModalCloseButton />
-      <Header>Open Up Subscribe</Header>
+      <Header>{type === 'OPEN_UP' ? 'Open Up Subscribe' : 'Set Price'}</Header>
       <CustomBody>
         <Box h={10}></Box>
         <ItemTittle alignItems={'center'} justifyContent={'space-between'}>
           Channel Name
-          <span>{bucketName}</span>
+          {/* <span>{bucketName}</span> */}
         </ItemTittle>
-        <FormControl onSubmit={handleSubmit} my={24}>
+        <FormControl my={24} isInvalid={error?.length > 0}>
           <LightMode>
             <Flex alignItems={'center'}>
               <FormLabel
@@ -193,6 +224,7 @@ export const OpenSubModal = (props: SubModalProps) => {
               />
               BNB
             </Flex>
+            {error && <FormErrorMessage>{error}</FormErrorMessage>}
           </LightMode>
         </FormControl>
         <FeeCon flexDirection={'column'} justifyContent={'space-between'}>
@@ -231,7 +263,7 @@ export const OpenSubModal = (props: SubModalProps) => {
             <Button
               width={'100%'}
               onClick={() => {
-                handleConfirm();
+                handleSubmit();
               }}
               disabled={!BSC_FEE_SUFF || loading}
               isLoading={loading}

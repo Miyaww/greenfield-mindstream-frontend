@@ -12,11 +12,11 @@ enum Type {
 }
 const navItems = [
   {
-    name: 'Trending',
+    name: 'Trending Channels',
     key: Type.Trending,
   },
   {
-    name: 'All',
+    name: 'All Users',
     key: Type.All,
   },
 ];
@@ -30,12 +30,13 @@ const HomeList = () => {
   const handleTabChange = useCallback((tab: any) => {
     navigator(`/?tab=${tab}`);
   }, []);
+  console.log(currentTab);
+
   return (
     <Container>
       <NavBar active={currentTab} onChange={handleTabChange} items={navItems} />
       <Box h={20} />
-
-      {currentTab === Type.All ? (
+      {currentTab === 'all' ? (
         <AllList></AllList>
       ) : (
         <TrendingList></TrendingList>
@@ -48,5 +49,6 @@ export default HomeList;
 
 const Container = styled.div`
   margin-top: 30px;
+  padding-top: 60px;
   width: 1123px;
 `;

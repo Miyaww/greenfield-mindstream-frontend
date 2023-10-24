@@ -63,12 +63,12 @@ export const getRandomSp = async () => {
 };
 
 export const multiTx = async (list: any) => {
-  // const client = await getClient();
+  const client = await getClient();
   return await client.basic.multiTx(list);
 };
 
 export const getBucketList = async (address: string) => {
-  // const client = await getClient();
+  const client = await getClient();
   const endpoint = await getRandomSp();
   const bucketList = await client.bucket.getUserBuckets({
     address,
@@ -113,20 +113,8 @@ export const getBucketFileList = async ({ bucketName }: any) => {
   return fileList;
 };
 
-interface MsgCreateGroup {
-  /** owner defines the account address of group owner who create the group */
-  creator: string;
-  /** group_name defines the name of the group. it's not globally unique. */
-  groupName: string;
-  /** member_request defines a list of member which to be add or remove */
-  members: string[];
-
-  extra: string;
-}
-
-export const CreateGroup = async (params: MsgCreateGroup) => {
+export const CreateGroup = async (params: any) => {
   const client = await getClient();
-
   return await client.group.createGroup(params);
 };
 
@@ -153,7 +141,6 @@ export const getGroupInfoByName = async (
   const client = await getClient();
   try {
     const { groupInfo } = await client.group.headGroup(groupName, groupOwner);
-    console.log(groupInfo, 'getGroupInfoByName');
     return groupInfo;
   } catch (e) {
     return null;
@@ -261,7 +248,9 @@ export const searchKey = async (key: string) => {
   const client = await getClient();
 
   try {
-    return await client.sp.listGroup(key, `${DAPP_NAME}_`, {
+    return await client.sp.listGroups({
+      name: key,
+      prefix: `${DAPP_NAME}_`,
       sourceType: 'SOURCE_TYPE_ORIGIN',
       limit: 1000,
       offset: 0,

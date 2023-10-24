@@ -49,6 +49,7 @@ export const GlobalReducer = (initialState: any, action: any) => {
   switch (action.type) {
     case 'ADD_BREAD':
       cp.breadList.push(action.item);
+      console.log(action.item, 'action.item');
       return {
         ...cp,
       };

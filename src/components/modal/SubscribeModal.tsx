@@ -7,8 +7,7 @@ import {
   FormControl,
   FormLabel,
   LightMode,
-} from '@totejs/uikit';
-import {
+  VStack,
   Modal,
   ModalHeader,
   ModalBody,
@@ -17,89 +16,66 @@ import {
   Button,
   RadioGroup,
   Radio,
-  HStack,
 } from '@totejs/uikit';
 import { useMemo, useState, useCallback } from 'react';
 import { useAccount, useNetwork, useSwitchNetwork } from 'wagmi';
-import {
-  BSC_CHAIN_ID,
-  LIST_ESTIMATE_FEE_ON_BSC,
-  BSC_SEND_GAS_FEE,
-} from '../../env';
+import { BSC_CHAIN_ID, LIST_ESTIMATE_FEE_ON_BSC } from '../../env';
+import { useUserSetting } from '../..//hooks/useUserSetting';
+import { useSubscribe } from '../..//hooks/useSubscribe';
 import { useChainBalance } from '../../hooks/useChainBalance';
-import { useEdit } from '../../hooks/useEdit';
-import { Loader } from '../Loader';
 import { roundFun, divide10Exp } from '../../utils';
 import { useModal } from '../../hooks/useModal';
-import { MindStreamContract } from '../../base/contract/mindStreamContract';
 import { useBuy } from '../../hooks/useBuy';
 import { useAsyncEffect } from 'ahooks';
 import { BN } from 'bn.js';
-
 interface SubModalProps {
   isOpen: boolean;
   handleOpen: (show: boolean) => void;
 }
-enum SubType {
-  OneMonth,
-  ThreeMonths,
-  OneYear,
+enum TypesOfSubscriptions {
+  OneMonth = 0,
+  ThreeMonths = 1,
+  OneYear = 2,
 }
 
 export const SubscribeModal = (props: SubModalProps) => {
   const { isOpen, handleOpen } = props;
+  const modalData = useModal();
 
   const [loading, setLoading] = useState(false);
-  const modalData = useModal();
   const { subItem }: { subItem: any } = modalData.modalState;
-  const [subType, setSubType] = useState<string>('');
+  const [subType, setSubType] = useState<number | null>(null);
   const [price, setPrice] = useState<string>('');
+  const [prices, setPrices] = useState<string[]>([]);
+  const { getSubPrice } = useUserSetting();
 
-  const { BucketInfo, groupId } = subItem;
-  const { BucketName: bucketName, Owner: ownerAddress } = BucketInfo;
+  const { groupId, groupName, ownerAddress } = subItem;
+  // const { BucketName: bucketName, Owner: ownerAddress } = BucketInfo;
+
+  const { subscribe } = useSubscribe(groupName, ownerAddress);
 
   const { switchNetwork } = useSwitchNetwork();
   const { BscBalanceVal } = useChainBalance();
   const { chain } = useNetwork();
   const { address } = useAccount();
-  const { buy, relayFee } = useBuy('', ownerAddress, address as string);
+  const { relayFee } = useBuy('', ownerAddress, address as string);
 
-  const onClose = () => {
-    reset();
-    handleOpen(false);
-  };
-  const getUsersInfo = useCallback(async () => {
+  useAsyncEffect(async () => {
     if (ownerAddress) {
-      setLoading(true);
-      const result = await MindStreamContract(false)
-        .methods.getUsersInfo(ownerAddress)
-        .call();
-      console.log(result);
-
-      if (result) {
-        return result;
-      }
+      const result = await getSubPrice(ownerAddress);
+      setPrices(result);
     }
   }, [ownerAddress]);
-  useAsyncEffect(async () => {
-    // const userInfo = await getUsersInfo();
-  }, []);
+
   const handleConfirm = useCallback(async () => {
-    if (groupId) {
+    if (ownerAddress && price && subType !== null) {
       setLoading(true);
-      // const result = await MindStreamContract(false)
-      //   .methods.subscribeOrRenew(ownerAddress, subType)
-      //   .send({ from: address, gasPrice: relayFee });
-      // if (result > 0) {
-      //   console.log(result);
-      //   return result;
-      // }
+      //groupId: number,price: string,subType: 0 | 1 | 2, ownerAddress: string,
+      await subscribe(groupId, price, subType);
+      reset();
+      setLoading(false);
     }
-  }, []);
-  const handleTypeChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const type = event.target.value;
-    setSubType(type);
-  };
+  }, [ownerAddress, subType, price]);
 
   const relayFeeBNB = useMemo(() => {
     const balance = divide10Exp(new BN(relayFee, 10), 18);
@@ -111,19 +87,15 @@ export const SubscribeModal = (props: SubModalProps) => {
     return balance;
   }, [price]);
 
+  //todo is service fee needed ?
   const earing = useMemo(() => {
     return Number(priceBNB) * 0.01;
   }, [priceBNB]);
+
   const TotalPrice = useMemo(() => {
     return roundFun(Number(priceBNB) + Number(earing) + Number(relayFeeBNB), 6);
   }, [earing, priceBNB, relayFeeBNB]);
 
-  const handleSubmit = (event: any) => {
-    event.preventDefault();
-
-    // Close the modal
-    onClose();
-  };
   const BSC_FEE_SUFF = useMemo(() => {
     return BscBalanceVal >= LIST_ESTIMATE_FEE_ON_BSC;
   }, [BscBalanceVal]);
@@ -131,7 +103,8 @@ export const SubscribeModal = (props: SubModalProps) => {
   //subscribe charge 1 month, 3 months, and 1 year at different prices.
 
   const reset = useCallback(() => {
-    setSubType('');
+    setSubType(null);
+    handleOpen(false);
   }, []);
 
   return (
@@ -144,26 +117,51 @@ export const SubscribeModal = (props: SubModalProps) => {
       closeOnOverlayClick={false}
     >
       <ModalCloseButton />
-      <Header>Open Up Subscribe</Header>
+      <Header>Subscribe</Header>
       <CustomBody>
         <Box h={10}></Box>
-        <ItemTittle alignItems={'center'} justifyContent={'space-between'}>
-          Channel Name
-          <span>{bucketName}</span>
+        {/* <ItemTittle alignItems={'center'}>
+          Channel Name:
+          <Box ml={10}>{bucketName}</Box>
+        </ItemTittle> */}
+        <ItemTittle alignItems={'center'} mt={10}>
+          Owner:
+          <Box ml={10}>{ownerAddress}</Box>
         </ItemTittle>
-        <FormControl onSubmit={handleSubmit} my={24}>
+        <FormControl my={24}>
           <LightMode>
             <RadioGroup
               onChange={(e) => {
                 if (!e) return;
-                setSubType(e.toString());
+                const subType = e.toString();
+                const subscriptionValue: number =
+                  TypesOfSubscriptions[
+                    subType as keyof typeof TypesOfSubscriptions
+                  ];
+                setSubType(subscriptionValue);
+                setPrice(prices[subscriptionValue]);
               }}
             >
-              <HStack alignItems="flex-start" spacing={24}>
-                <Radio value={SubType.OneMonth}>One Month</Radio>
-                <Radio value={SubType.ThreeMonths}>Three Months</Radio>
-                <Radio value={SubType.OneYear}>One Year</Radio>
-              </HStack>
+              <VStack alignItems="flex-start" spacing={24} fontSize={16}>
+                <Flex>
+                  <Radio value={'OneMonth'}>One Month</Radio>{' '}
+                  <Box ml={20} color="scene.primary.normal" fontWeight={500}>
+                    {divide10Exp(new BN(prices[0], 10), 18)} BNB
+                  </Box>
+                </Flex>
+                <Flex>
+                  <Radio value={'ThreeMonths'}>Three Months</Radio>
+                  <Box ml={20} color="scene.primary.normal" fontWeight={500}>
+                    {divide10Exp(new BN(prices[1], 10), 18)} BNB
+                  </Box>
+                </Flex>
+                <Flex>
+                  <Radio value={'OneYear'}>One Year</Radio>
+                  <Box ml={20} color="scene.primary.normal" fontWeight={500}>
+                    {divide10Exp(new BN(prices[2], 10), 18)} BNB
+                  </Box>
+                </Flex>
+              </VStack>
             </RadioGroup>
           </LightMode>
         </FormControl>
@@ -248,7 +246,7 @@ const CustomBody = styled(ModalBody)`
 const ItemTittle = styled(Flex)`
   font-style: normal;
   font-weight: 400;
-  font-size: 12px;
+  font-size: 16px;
   line-height: 18px;
 
   color: #1e2026;

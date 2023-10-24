@@ -4,31 +4,24 @@ import { useModal } from '../hooks/useModal';
 import styled from '@emotion/styled';
 import { Button, Flex, Badge } from '@totejs/uikit';
 import { useWalletModal } from '../hooks/useWalletModal';
-import { ITrendingListItem } from '../hooks/useTrendingList';
 import { useNavigate } from 'react-router-dom';
-import { IGroupItem } from '@/base/type';
+import { IGroupItem, ObjectInfo } from '../base/type';
 
 interface IActionCom {
-  data: ITrendingListItem;
+  data: ObjectInfo;
   address: string;
 }
-export const ActionCom = (obj: IActionCom) => {
+export const FileActionCom = (obj: IActionCom) => {
   const { data, address } = obj;
-  const { groupId, groupName, ownerAddress } = data;
   const { isConnected, isConnecting } = useAccount();
 
   const modalData = useModal();
+  const { activeGroup } = modalData.modalState;
+  const { groupId, groupName, ownerAddress } = activeGroup;
 
   const { status } = useStatus(groupName, ownerAddress, address);
   const { handleModalOpen } = useWalletModal();
   const navigate = useNavigate();
-
-  const handleSetActive = (data: IGroupItem) => {
-    modalData.modalDispatch({
-      type: 'SET_ACTIVE_GROUP',
-      activeGroup: data,
-    });
-  };
 
   return (
     <ButtonCon gap={6}>
@@ -51,11 +44,19 @@ export const ActionCom = (obj: IActionCom) => {
         <Button
           size={'sm'}
           onClick={() => {
-            handleSetActive(data);
-            const { groupName } = data;
-            const type = groupName === 'public' ? 'public' : 'private';
+            // handleSetActive(data);
+            const type = groupName.includes('public') ? 'public' : 'private';
             navigate(
-              `/channelList?tab=${type}&address=${ownerAddress}&groupName=${groupName}&groupId=${groupId}`,
+              `/file?tab=${type}&address=${ownerAddress}&groupId=${groupId}&groupName=${groupName}`,
+              {
+                state: {
+                  fileTitle: data.ObjectName,
+                  createAt: data.CreateAt,
+                  owner: data.Owner,
+                  channel: data.BucketName,
+                  isPrivate: type === 'private',
+                },
+              },
             );
           }}
         >

@@ -1,69 +1,71 @@
 import { useChannelInfo } from '../../hooks/useChannelInfo';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import {
   Table,
   Box,
-  Link,
+  Link as UILink,
   Flex,
   Breadcrumb,
   BreadcrumbItem,
-  BreadcrumbLink,
   Button,
 } from '@totejs/uikit';
 import styled from '@emotion/styled';
 import { useAccount } from 'wagmi';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { contentTypeToExtension, encodeObjectName } from '../../utils';
-import { useGlobal } from '../../hooks/useGlobal';
 import { NoData } from '../../components/NoData';
+import { FileActionCom } from '../../components/FileActionCom';
 import dayjs from 'dayjs';
 import utc from 'dayjs/plugin/utc';
-import { VisibilityType } from '@bnb-chain/greenfield-cosmos-types/greenfield/storage/common';
+import { useStatus } from '../../hooks/useStatus';
+import { useModal } from '../../hooks/useModal';
+import { Loader } from '../../components/Loader';
 
 dayjs.extend(utc);
-
-interface ChannelInfoProps {
-  bucketId: string;
-  bucketName: string;
+enum Type {
+  Public = 'public',
+  Private = 'private',
 }
-export const ChannelInfo = (props: ChannelInfoProps) => {
-  const [tableData, setTableData] = useState<any>();
-  const navigate = useNavigate();
-  const [breadItems, setBreadItems] = useState<any>([]);
-  const { bucketId, bucketName } = props;
-  const [owner, setOwner] = useState('');
+export const ChannelInfo = () => {
   const { address } = useAccount();
-  const { bucketInfo, objectList, loading, primarySp, fetchChannelInfo } =
-    useChannelInfo(bucketId, bucketName);
 
+  const [tableData, setTableData] = useState<any>();
+  const [p] = useSearchParams();
+  const navigate = useNavigate();
+  const tab = p.getAll('tab')[0];
+  const type = tab ? tab : Type.Public;
+  const modalData = useModal();
+  const activeGroup = modalData.modalState.activeGroup;
+  const [objectList, setObjList] = useState<any>([]);
+  const { groupName, groupId, ownerAddress } = activeGroup;
+  // const { bucketId, bucketName } = props;
+  const { publicObjList, privateObjList, fetchChannelInfo, loading } =
+    useChannelInfo();
+
+  const { status } = useStatus(groupName, ownerAddress, address as string);
   useEffect(() => {
     fetchChannelInfo();
-  }, [fetchChannelInfo]);
+  }, [type, address, ownerAddress]);
   useEffect(() => {
     if (loading) return;
-    if (bucketInfo?.owner) {
-      setOwner(bucketInfo?.owner);
+    if (type && type === 'public') {
+      setObjList(publicObjList);
+    } else {
+      setObjList(privateObjList);
     }
-  }, [loading, bucketInfo]);
+  }, [loading, type]);
 
   useEffect(() => {
-    if (loading || !objectList?.length) return;
-    console.log(address, owner, address === owner);
-
-    if (address === owner) {
-      const data = objectList.filter((item: any) => {
-        return !item.Removed && item.ObjectInfo?.ObjectStatus;
-      });
-      const objInfoList = data.map((item: any) => {
-        return item.ObjectInfo;
-      });
-      console.log(objInfoList, 'objInfoList');
-      setTableData(objInfoList);
-    }
-  }, [address, objectList, owner, loading]);
-  const isPrivate = (visibility: number) => {
-    return visibility === VisibilityType.VISIBILITY_TYPE_PRIVATE;
-  };
+    if (loading || !address) return;
+    console.log('settabledata');
+    const data = objectList.filter((item: any) => {
+      return !item.Removed && item.ObjectInfo?.ObjectStatus;
+    });
+    const objInfoList = data.map((item: any) => {
+      return item.ObjectInfo;
+    });
+    setTableData(objInfoList);
+  }, [address, objectList, loading, ownerAddress]);
 
   const columns = [
     {
@@ -98,62 +100,96 @@ export const ChannelInfo = (props: ChannelInfoProps) => {
       header: 'Action',
       cell: (data: any) => {
         if (!data.ObjectName) return <Box></Box>;
-        const encodedObjectName = encodeObjectName(data.ObjectName);
-        const privateFile = isPrivate(data.Visibility);
-        const previewLink = privateFile
-          ? encodeURI(`${primarySp}/view/${bucketName}/${encodedObjectName}`)
-          : '';
-        return (
-          <Box>
-            <Link
-              _hover={{ cursor: 'pointer' }}
-              onClick={() => {
-                navigate(`/file`, {
-                  state: {
-                    previewLink,
-                    fileTitle: data.ObjectName,
-                    createAt: data.CreateAt,
-                    owner: data.Owner,
-                    channel: data.BucketName,
-                    isPrivate: privateFile,
-                    bucketId,
-                  },
-                });
-              }}
-            >
-              view
-            </Link>
-          </Box>
-        );
+        return <FileActionCom data={data} address={address as string} />;
       },
     },
   ];
-  if (!loading && !tableData?.length)
-    return (
-      <NoDataCon
-        alignItems={'center'}
-        justifyContent={'center'}
-        flexDirection={'column'}
-      >
-        <NoData size={280}></NoData>
-        <NoDataTitle>No Data</NoDataTitle>
-        <Button
-          mt={20}
-          fontSize={20}
-          onClick={() => {
-            navigate(`/edit?bucketName=${bucketName}`);
-          }}
-        >
-          Write Blog
-        </Button>
-      </NoDataCon>
-    );
+  //subscribe
+  // if (!loading && status === 1 && tab === 'private') {
+  //   return (
+  //     <NoDataCon
+  //       alignItems={'center'}
+  //       justifyContent={'center'}
+  //       flexDirection={'column'}
+  //     >
+  //       <Box h={32}></Box>
+  //       <NoDataTitle>Private Channel</NoDataTitle>
+  //       <Box h={24}></Box>
+  //       <NoDataSub>Subscribe to view the content</NoDataSub>
+  //     </NoDataCon>
+  //   );
+  // }
+  //no data
+  // if (!loading && !tableData?.length)
+  //   return (
+  //     <NoDataCon
+  //       alignItems={'center'}
+  //       justifyContent={'center'}
+  //       flexDirection={'column'}
+  //     >
+  //       <NoData size={280}></NoData>
+  //       <NoDataTitle>No Data</NoDataTitle>
+  //       {address === ownerAddress && (
+  //         <Button
+  //           mt={20}
+  //           fontSize={20}
+  //           onClick={() => {
+  //             navigate(
+  //               `/edit?address=${address}&groupName=${groupName}&groupId=${groupId}`,
+  //             );
+  //           }}
+  //         >
+  //           Write Blog
+  //         </Button>
+  //       )}
+  //     </NoDataCon>
+  //   );
+
   return (
-    <Container>
-      {!loading && tableData && tableData.length && (
-        <Table data={tableData} columns={columns}></Table>
-      )}
-    </Container>
+    <>
+      <Container>
+        {loading ? (
+          <Loader />
+        ) : tableData && tableData?.length ? (
+          <Table data={tableData} columns={columns} loading={loading}></Table>
+        ) : tab === 'private' && ownerAddress !== address ? (
+          <NoDataCon
+            alignItems={'center'}
+            justifyContent={'center'}
+            flexDirection={'column'}
+          >
+            <Box h={32}></Box>
+            <NoDataTitle>Private Channel</NoDataTitle>
+            <Box h={24}></Box>
+            <NoDataSub>Subscribe to view the content</NoDataSub>
+          </NoDataCon>
+        ) : (
+          <NoDataCon
+            alignItems={'center'}
+            justifyContent={'center'}
+            flexDirection={'column'}
+          >
+            <NoData size={280}></NoData>
+            <NoDataTitle>No Data</NoDataTitle>
+          </NoDataCon>
+        )}
+
+        <Flex w="100%" justifyContent={'center'} alignItems={'center'} mt={40}>
+          {address === ownerAddress && (
+            <Button
+              size="lg"
+              onClick={() => {
+                navigate(
+                  `/edit?address=${address}&groupName=${groupName}&groupId=${groupId}`,
+                );
+              }}
+            >
+              Write Blog
+            </Button>
+          )}
+        </Flex>
+      </Container>
+    </>
   );
 };
 const Container = styled.div`

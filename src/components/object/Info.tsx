@@ -1,61 +1,63 @@
 import { get } from '../../base/http';
 import { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useSearchParams } from 'react-router-dom';
 import { Flex, Box, Image, Divider } from '@totejs/uikit';
 import { useProfile } from '../../hooks/useProfile';
 import { useChannelInfo } from '../../hooks/useChannelInfo';
+import { useStatus } from '../../hooks/useStatus';
+import { convertUnixTimeStampToDate } from '../../utils/time';
+import { useSubscribe } from '../../hooks/useSubscribe';
 
 import { useAsyncEffect } from 'ahooks';
-import { convertUnixTimeStampToDate } from '../../utils/time';
 import { useAccount } from 'wagmi';
 
 interface IProfile {
   avatar: string;
   name: string;
 }
-
 export const FileInfo = () => {
   const { address } = useAccount();
   const [markdownContent, setMarkdownContent] = useState<string>('');
+  const [followed, setFollowed] = useState<boolean>(false);
   const location = useLocation();
+  const [p] = useSearchParams();
+  const groupName = p.get('groupName') || '';
   const [profile, setProfile] = useState<IProfile>({} as IProfile);
-  const {
-    previewLink,
-    fileTitle,
-    createAt,
-    owner,
-    channel,
-    isPrivate,
-    bucketId,
-  } = location.state;
-  console.log(previewLink, isPrivate);
-  const { bucketInfo, getObjectPreviewLink } = useChannelInfo(
-    bucketId,
-    channel,
-  );
+  const { fileTitle, createAt, owner, channel } = location.state;
+  const { getObjectPreviewLink } = useChannelInfo();
+
   const { getProfile } = useProfile();
   const lastIndex = fileTitle.lastIndexOf('-');
   const title = fileTitle.substring(0, lastIndex);
+  const [noPermission, setNoPermission] = useState<boolean>(false);
+  // const { subscribe } = useSubscribe(channel, owner);
+
   useAsyncEffect(async () => {
     if (!owner) return;
     const res = await getProfile(owner);
     setProfile(res);
   }, [owner]);
-  const handleSubscribe = () => {
-    //todo
-  };
+  useEffect(() => {
+    const followList = localStorage.getItem('followList') || '';
+    if (followList.includes(owner)) {
+      setFollowed(true);
+    }
+  }, []);
+  const { status } = useStatus(groupName, owner, address as string);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         let previewUrl;
-        if (isPrivate) {
-          previewUrl = await getObjectPreviewLink(fileTitle);
-          console.log(1);
+        if (status === 2 || status === 0) {
+          setNoPermission(false);
+          previewUrl = await getObjectPreviewLink(fileTitle, channel);
         } else {
-          previewUrl = previewLink;
+          setNoPermission(true);
+          return;
         }
+        if (!previewUrl) return;
         const response = await get({
           url: previewUrl,
         });
@@ -67,10 +69,11 @@ export const FileInfo = () => {
       }
     };
     fetchData();
-  }, []);
+  }, [status, owner, groupName]);
   const handleFollow = () => {
     const followList = localStorage.getItem('followList') || '';
     localStorage.setItem('followList', followList + ',' + owner);
+    setFollowed(true);
   };
 
   return (
@@ -86,16 +89,27 @@ export const FileInfo = () => {
               <Box fontSize={24} lineHeight={'32px'}>
                 {profile.name}
               </Box>
-              <Box
-                ml={18}
-                lineHeight={'32px'}
-                color="#FFC130"
-                onClick={() => handleFollow()}
-                _hover={{ cursor: 'pointer' }}
-                fontSize={16}
-              >
-                Follow
-              </Box>
+              {followed ? (
+                <Box
+                  ml={18}
+                  lineHeight={'32px'}
+                  color="scene.success.active"
+                  fontSize={16}
+                >
+                  Followed
+                </Box>
+              ) : (
+                <Box
+                  ml={18}
+                  lineHeight={'32px'}
+                  color="scene.primary.normal"
+                  onClick={() => handleFollow()}
+                  _hover={{ cursor: 'pointer' }}
+                  fontSize={16}
+                >
+                  Follow
+                </Box>
+              )}
             </Flex>
             <Box fontSize={16}>{convertUnixTimeStampToDate(createAt)}</Box>
           </Box>
@@ -114,22 +128,15 @@ export const FileInfo = () => {
         >
           Published in <span>{channel}</span> Channel
         </Box>
-        {address !== owner && (
-          <Box
-            ml={24}
-            color="#FFC130"
-            fontSize={16}
-            onClick={() => handleSubscribe()}
-            _hover={{ cursor: 'pointer' }}
-          >
-            Subscribe
-          </Box>
-        )}
       </Flex>
       <Divider my={20} />
-      <Box fontSize={20} mb={20}>
-        <ReactMarkdown>{markdownContent}</ReactMarkdown>
-      </Box>
+      {noPermission ? (
+        <Box>Please subscribe to view this file</Box>
+      ) : (
+        <Box fontSize={20} mb={20}>
+          <ReactMarkdown>{markdownContent}</ReactMarkdown>
+        </Box>
+      )}
     </Flex>
   );
 };

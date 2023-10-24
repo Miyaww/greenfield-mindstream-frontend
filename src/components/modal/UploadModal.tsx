@@ -16,6 +16,7 @@ import { useChainBalance } from '../../hooks/useChainBalance';
 import { roundFun } from '../../utils';
 import { Loader } from '../Loader';
 import { useUpload } from '../../hooks/useUpload';
+import { useNavigate } from 'react-router-dom';
 
 interface UploadModalProps {
   isOpen: boolean;
@@ -27,7 +28,7 @@ export const UploadModal = (props: UploadModalProps) => {
   const { isOpen, handleOpen, detail } = props;
   const { pending, handleUploadFile, simulateInfo, simulateTx, simloading } =
     useUpload();
-  const { bucket_name, object_name, file } = detail;
+  const { bucket_name, object_name, file, bucketId } = detail;
   const fileName = object_name;
   const channelType = bucket_name.includes('public') ? 'public' : 'private';
 
@@ -35,14 +36,11 @@ export const UploadModal = (props: UploadModalProps) => {
   const { GfBalanceVal } = useChainBalance();
 
   const { chain } = useNetwork();
+  const navigate = useNavigate();
 
   const GF_FEE_SUFF = useMemo(() => {
     return GfBalanceVal >= LIST_FEE_ON_GF;
   }, [GfBalanceVal]);
-  useEffect(() => {
-    if (!isOpen) return;
-    simulateTx(file, bucket_name, fileName);
-  }, [isOpen]);
   const reset = useCallback(() => {
     handleOpen(false);
   }, []);
@@ -61,7 +59,7 @@ export const UploadModal = (props: UploadModalProps) => {
       closeOnOverlayClick={false}
     >
       <ModalCloseButton />
-      <Header>Uploading File</Header>
+      <Header>Post Blog</Header>
       <CustomBody>
         <Box h={10}></Box>
         <InfoCon gap={26} justifyContent={'center'} alignItems={'center'}>
@@ -130,13 +128,23 @@ export const UploadModal = (props: UploadModalProps) => {
               width={'100%'}
               onClick={async () => {
                 const res = await handleUploadFile(file, bucket_name, fileName);
-                if (!pending && res) {
+                if (!pending) {
                   reset();
+                  if (res === 0) {
+                    setTimeout(() => {
+                      navigate(`/`, {
+                        state: {
+                          bucketName: bucket_name,
+                          bucketId: bucketId,
+                        },
+                      });
+                    }, 300);
+                  }
                 }
               }}
               disabled={!available}
             >
-              Upload File
+              Post Blog
             </Button>
           )}
           {chain && chain.id !== GF_CHAIN_ID ? (

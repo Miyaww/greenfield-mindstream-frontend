@@ -1,31 +1,53 @@
 import Header from './Header';
 import Footer from './Footer';
-import { ReactNode, useCallback } from 'react';
+import { ReactNode, useCallback, useEffect } from 'react';
 import styled from '@emotion/styled';
 import { Flex } from '@totejs/uikit';
 import { ListModal } from '../modal/ListModal';
 import { ListProcess } from '../modal/ListProcess';
 import { ActionResult } from '../modal/ActionResult';
 import { BuyIndex } from '../modal/buy/Index';
+import { SubscribeModal } from '../modal/SubscribeModal';
 
 import { useModal } from '../../hooks/useModal';
 import { useWalletModal } from '../../hooks/useWalletModal';
 import { WalletConnectModal } from '../wallet/WalletConnectModal';
+import { useSearchParams, useNavigate } from 'react-router-dom';
+import { useAccount } from 'wagmi';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const modalData = useModal();
   const { modalData: walletModalData, handleModalClose } = useWalletModal();
   const walletModalOpen = walletModalData.modalState?.open;
+  const [p] = useSearchParams();
+  const { isConnected, isConnecting } = useAccount();
+  const navigator = useNavigate();
 
   const {
     openList,
     initInfo,
     openListProcess,
-    openDelist,
+    openSubModal,
     openResult,
     result,
     callBack,
   } = modalData.modalState;
+  useEffect(() => {
+    if (!isConnected && !isConnecting) {
+      navigator('/');
+    }
+  }, [isConnected, isConnecting]);
+
+  // useEffect(() => {
+  //   console.log('SET_ACTIVE_GROUP');
+  //   const groupId = p.get('groupId');
+  //   const groupName = p.get('groupName');
+  //   const ownerAddress = p.get('address');
+  //   modalData.modalDispatch({
+  //     type: 'SET_ACTIVE_GROUP',
+  //     activeGroup: { groupId, groupName, ownerAddress },
+  //   });
+  // }, []);
 
   const handleListOpen = useCallback(() => {
     modalData.modalDispatch({ type: 'CLOSE_LIST' });
@@ -41,6 +63,9 @@ export default function Layout({ children }: { children: ReactNode }) {
 
   const handleResultOpen = useCallback(() => {
     modalData.modalDispatch({ type: 'CLOSE_RESULT' });
+  }, []);
+  const handleSubOpen = useCallback(() => {
+    modalData.modalDispatch({ type: 'CLOSE_SUB_MODAL' });
   }, []);
 
   return (
@@ -68,6 +93,14 @@ export default function Layout({ children }: { children: ReactNode }) {
             handleListProcessOpen();
           }}
         ></ListProcess>
+      )}
+      {openSubModal && (
+        <SubscribeModal
+          isOpen={openSubModal}
+          handleOpen={() => {
+            handleSubOpen();
+          }}
+        ></SubscribeModal>
       )}
 
       <BuyIndex></BuyIndex>
@@ -98,6 +131,6 @@ const Main = styled.main`
 `;
 
 const Container = styled(Flex)`
-  background-color: #000000;
+  background-color: #333333;
   min-height: 100vh;
 `;

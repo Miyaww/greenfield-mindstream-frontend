@@ -67,8 +67,6 @@ const NavContainer = styled.div`
   height: 52px;
   line-height: 52px;
   white-space: nowrap;
-  width: 100%;
-  overflow: scroll;
   &::-webkit-scrollbar {
     display: none;
   }

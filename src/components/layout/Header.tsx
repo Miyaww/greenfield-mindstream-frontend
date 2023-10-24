@@ -136,23 +136,13 @@ const Header = () => {
           <>
             <Button
               onClick={() => {
-                navigate('/edit');
+                navigate(`/channelList?tab=public&address=${address}`);
               }}
               variant="text"
               color="text.normal"
             >
-              write blog
+              My Channels
             </Button>
-            {/* <Button
-              variant="text"
-              onClick={() => {
-                if (!isConnecting && !isConnected) handleModalOpen();
-                navigate('/edit');
-              }}
-              color="text.normal"
-            >
-              Create channel
-            </Button> */}
           </>
         )}
         {address && (
@@ -246,7 +236,7 @@ const Header = () => {
                 <MenuElement
                   onClick={async (e: React.MouseEvent<HTMLElement>) => {
                     e.preventDefault();
-                    navigate('/channelList');
+                    navigate(`/channelList?tab=public&address=${address}`);
                   }}
                 >
                   <DepositIcon mr={8} width={24} height={24} />
@@ -293,15 +283,15 @@ const Header = () => {
     </HeaderFlex>
   );
 };
-//0xBB3aaCB333F05a30270747DeE1BBE8277001D0F6
 export default Header;
 
 const HeaderFlex = styled(Flex)`
   position: fixed;
   width: 100%;
   z-index: 10;
-  background-color: #1e2026;
+  background-color: #333333;
   border-bottom: 1px #2f3034 solid;
+  box-shadow: 0px 4px 4px rgba(0, 0, 0, 0.12);
 `;
 const LeftCon = styled(Flex)`
   img {

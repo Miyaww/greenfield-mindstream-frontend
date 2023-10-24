@@ -4,8 +4,8 @@
   "private": true,
   "dependencies": {
     "@babel/core": "^7.16.0",
-    "@bnb-chain/greenfield-cosmos-types": "0.4.0-alpha.22",
-    "@bnb-chain/greenfield-js-sdk": "0.2.4-alpha.26",
+    "@bnb-chain/greenfield-cosmos-types": "0.4.0",
+    "@bnb-chain/greenfield-js-sdk": "0.2.4",
     "@bnb-chain/greenfiled-file-handle": "0.2.1",
     "@dopex-io/web3-multicall": "^0.1.9",
     "@emotion/react": "^11.11.0",
@@ -130,7 +130,8 @@
     "prettier": "^2.8.8",
     "react-dev-utils": "^12.0.1",
     "tslint": "^6.1.3",
-    "webpack-bundle-analyzer": "^4.9.0"
+    "webpack-bundle-analyzer": "^4.9.0",
+    "@babel/plugin-proposal-private-property-in-object": "~7.16.0"
   },
   "jest": {
     "roots": [

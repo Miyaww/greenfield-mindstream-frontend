@@ -24,7 +24,7 @@ export const useProfile = () => {
 
   const getProfile = async (address: any) => {
     const profile = await MindStreamContract(false)
-      .methods.profileByAddress(address)
+      .methods.getProfileByAddress(address)
       .call();
     return profile;
   };

@@ -6,8 +6,6 @@ import { ThemeProvider } from '@totejs/uikit';
 import { bscTestnet } from 'wagmi/chains';
 import Layout from './components/layout/Index';
 import Home from './pages/Home';
-import Profile from './pages/Profile';
-import { ChannelDetail } from './pages/ChannelDetail';
 import { FileDetail } from './pages/FileInfo';
 import { theme } from './theme';
 import { Route, Routes, HashRouter } from 'react-router-dom';
@@ -16,6 +14,7 @@ import { GlobalProvider } from './context/global';
 import { WalletModalProvider } from './context/walletModal';
 import { OffChainAuthProvider } from './context/offchainAuthContext';
 import { EditObject } from './components/object/Edit';
+import { Channel } from './components/channel/index';
 
 import './base/global.css';
 
@@ -46,15 +45,11 @@ const routes: Array<IRoute> = [
   },
   {
     path: '/channelList',
-    element: <Profile></Profile>,
+    element: <Channel></Channel>,
   },
   {
     path: '/edit',
     element: <EditObject></EditObject>,
-  },
-  {
-    path: '/channel',
-    element: <ChannelDetail></ChannelDetail>,
   },
   {
     path: '/file',
@@ -124,6 +119,7 @@ function App() {
       warn: (message: string) => console.log(message),
     },
   });
+
   return (
     <WagmiConfig client={client}>
       <ThemeProvider theme={theme}>

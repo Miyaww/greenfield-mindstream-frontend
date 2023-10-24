@@ -3,8 +3,6 @@ import { NavBar } from '../NavBar';
 import { useCallback, useEffect, useState } from 'react';
 import { Box, Button, Flex } from '@totejs/uikit';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import PurchaseList from './PurchaseList';
-import OtherListedList from './OtherListedList';
 import { DCELLAR_URL } from '../../env';
 
 enum Type {

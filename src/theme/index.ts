@@ -6,7 +6,7 @@ export const theme: Theme = {
   config: {
     useSystemColorMode: false,
     initialColorMode: 'dark',
-    storageKey: 'marketplace-color-mode',
+    storageKey: 'mindstream-color-mode',
   },
 
   ...colors,

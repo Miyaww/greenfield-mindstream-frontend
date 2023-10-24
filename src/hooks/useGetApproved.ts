@@ -1,24 +1,25 @@
-// import { useCallback, useState, useEffect } from 'react';
-// import { useGetChainProviders } from './useGetChainProviders';
 import Web3 from 'web3';
 
 import { useEffect, useState } from 'react';
 import { useAccount } from 'wagmi';
-import { MINDSTREAM_CONTRACT_ADDRESS } from '../env';
-import { GroupHubContract } from '../base/contract/groupHub';
+import { OwnBuyContract } from '../base/contract/ownBuyContract';
 
-export const useHasRole = () => {
+import { useModal } from './useModal';
+
+export const useGetApproved = () => {
+  const modalData = useModal();
+
   const { address } = useAccount();
   const [hasRole, setHasRole] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  const { activeGroup } = modalData.modalState;
+  const { groupId } = activeGroup;
+
   useEffect(() => {
-    if (address) {
-      GroupHubContract(false)
-        .methods.hasRole(
-          Web3.utils.keccak256('ROLE_UPDATE'),
-          address,
-          MINDSTREAM_CONTRACT_ADDRESS,
-        )
+    if (address && groupId) {
+      OwnBuyContract(false)
+        .methods.getApproved(Number(groupId))
         .call({ from: address })
         .then((result: any) => {
           setHasRole(!!result);

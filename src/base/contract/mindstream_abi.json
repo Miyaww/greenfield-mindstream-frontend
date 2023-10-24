@@ -1342,6 +1342,40 @@
   {
     "inputs": [
       {
+        "internalType": "address",
+        "name": "_author",
+        "type": "address"
+      }
+    ],
+    "name": "getProfileByAddress",
+    "outputs": [
+      {
+        "internalType": "string",
+        "name": "_name",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_avatar",
+        "type": "string"
+      },
+      {
+        "internalType": "string",
+        "name": "_bio",
+        "type": "string"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_createTime",
+        "type": "uint256"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
         "internalType": "bytes32",
         "name": "role",
         "type": "bytes32"
@@ -1389,6 +1423,40 @@
         "internalType": "uint256[]",
         "name": "_volumes",
         "type": "uint256[]"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "_author",
+        "type": "address"
+      }
+    ],
+    "name": "getStatusByAddress",
+    "outputs": [
+      {
+        "internalType": "uint256",
+        "name": "_subscribeID",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256[3]",
+        "name": "_prices",
+        "type": "uint256[3]"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_salesVolume",
+        "type": "uint256"
+      },
+      {
+        "internalType": "uint256",
+        "name": "_salesRevenue",
+        "type": "uint256"
       }
     ],
     "stateMutability": "view",
@@ -1684,40 +1752,6 @@
     "inputs": [
       {
         "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "profileByAddress",
-    "outputs": [
-      {
-        "internalType": "string",
-        "name": "name",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "avatar",
-        "type": "string"
-      },
-      {
-        "internalType": "string",
-        "name": "bio",
-        "type": "string"
-      },
-      {
-        "internalType": "uint256",
-        "name": "createTime",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
         "name": "operator",
         "type": "address"
       }
@@ -1868,25 +1902,6 @@
   {
     "inputs": [
       {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "settingsByAddress",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "subscribeID",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
         "internalType": "uint8",
         "name": "",
         "type": "uint8"
@@ -1895,30 +1910,6 @@
     "name": "skipPackage",
     "outputs": [],
     "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "address",
-        "name": "",
-        "type": "address"
-      }
-    ],
-    "name": "statisticsByAddress",
-    "outputs": [
-      {
-        "internalType": "uint256",
-        "name": "salesVolume",
-        "type": "uint256"
-      },
-      {
-        "internalType": "uint256",
-        "name": "salesRevenue",
-        "type": "uint256"
-      }
-    ],
-    "stateMutability": "view",
     "type": "function"
   },
   {

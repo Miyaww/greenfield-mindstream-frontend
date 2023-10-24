@@ -82,12 +82,8 @@ export const useUpload = () => {
   );
   const handleUploadFile = useCallback(
     async (file: any, bucketName: string, fileName: string) => {
-      if (!address) return {};
+      if (!address || !file) return {};
       try {
-        if (!address || !file) {
-          toast.warning({ description: 'Please select a file or address' });
-          return;
-        }
         const objectName = `${fileName}-${timestamp}`;
         if (file.size > 1024 * 1024 * 100) {
           toast.warning({ description: 'File size too large' });
@@ -160,9 +156,10 @@ export const useUpload = () => {
         }
         setSimulateInfo(simulateInfo);
         setPending(false);
-        return uploadRes;
+        return uploadRes.code;
       } catch (err) {
         console.log(err);
+        setPending(false);
       }
       setPending(false);
       return {};

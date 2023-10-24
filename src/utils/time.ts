@@ -30,7 +30,6 @@ export const convertUnixTimeStampToDate = (timestamp: number) => {
   dayjs.extend(timezone);
   // utc-0 timezone
   const tz = 'Iceland';
-
   return dayjs.unix(timestamp).utc().format('YYYY-MM-DD hh:mm');
 };
 

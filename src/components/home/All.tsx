@@ -20,122 +20,57 @@ import { ActionCom } from '../ActionCom';
 interface ITotalVol {
   id: string;
 }
-const TotalVol = (props: ITotalVol) => {
-  const { id } = props;
-  const { salesVolume } = useSalesVolume(id);
-  return <div>{salesVolume}</div>;
-};
 const AllList = () => {
   const { handlePageChange, page } = usePagination();
-  const navigator = useNavigate();
-  const { address } = useAccount();
-  const { list, loading, total } = useGetListed(address, page, 10);
+  const { address: realAddress } = useAccount();
+  const { list, loading, total } = useGetListed(realAddress, page, 10);
   console.log(list);
-
-  const state = useGlobal();
+  const handleFollow = (owner: string) => {
+    const followList = localStorage.getItem('followList') || '';
+    localStorage.setItem('followList', followList + ',' + owner);
+  };
 
   const columns = [
     {
-      header: 'Data',
+      header: 'Creator',
       width: 200,
       cell: (data: any) => {
-        const {
-          name,
-          url,
-          id,
-          metaData: { groupName },
-          ownerAddress,
-          type,
-        } = data;
+        const { name, avatar, address } = data;
         return (
           <ImgContainer
             alignItems={'center'}
             justifyContent={'flex-start'}
             gap={6}
-            onClick={() => {
-              const item = {
-                path: '/',
-                name: 'Data MarketPlace',
-                query: 'tab=trending',
-              };
-              state.globalDispatch({
-                type: 'UPDATE_BREAD',
-                index: 0,
-                item,
-              });
-
-              navigator(
-                `/resource?gid=${id}&gn=${groupName}&address=${ownerAddress}&tab=dataList&from=${encodeURIComponent(
-                  JSON.stringify([item]),
-                )}`,
-              );
-            }}
           >
-            <ImgCon src={url || defaultImg(name, 40)}></ImgCon>
-            {trimLongStr(name, 15)}
-            {type === 'Collection' && (
-              <CollectionLogo
-                style={{ width: '10px', height: '10px' }}
-              ></CollectionLogo>
-            )}
+            <ImgCon src={avatar || defaultImg(name, 40)}></ImgCon>
+            {trimLongStr(address, 15)}
           </ImgContainer>
         );
       },
     },
     {
-      header: 'Type',
+      header: 'Name',
       cell: (data: any) => {
-        const { type, name } = data;
-        return (
-          <div>
-            {type === 'Collection' ? type : contentTypeToExtension(name, name)}
-          </div>
-        );
+        const { name } = data;
+        return <div>{name}</div>;
       },
     },
     {
-      header: 'Price',
+      header: 'Bio',
       width: 160,
       cell: (data: any) => {
-        const { price } = data;
-        const balance = divide10Exp(new BN(price, 10), 18);
-        return <div>{balance} BNB</div>;
+        const { bio } = data;
+        return <div>{bio}</div>;
       },
     },
-    {
-      header: 'Data Listed',
-      width: 160,
-      cell: (data: any) => {
-        const { listTime } = data;
-        return <div>{listTime ? formatDateUTC(listTime * 1000) : '-'}</div>;
-      },
-    },
-    {
-      header: 'Total Vol',
-      width: 120,
-      cell: (data: any) => {
-        const { id } = data;
-        return <TotalVol id={id}></TotalVol>;
-      },
-    },
-    {
-      header: 'Creator',
-      width: 120,
-      cell: (data: any) => {
-        const { ownerAddress } = data;
-        return (
-          <MyLink to={`/channelList?address=${ownerAddress}`}>
-            {trimLongStr(ownerAddress)}
-          </MyLink>
-        );
-      },
-    },
-    {
-      header: 'Action',
-      cell: (data: any) => {
-        return <ActionCom data={data} address={address as string}></ActionCom>;
-      },
-    },
+    // {
+    //   header: 'Address',
+    //   width: 120,
+    //   cell: (data: any) => {
+    //     const { address } = data;
+    //     return <div>{trimLongStr(address)}</div>;
+    //   },
+    // },
   ];
   return (
     <Container>
@@ -143,7 +78,7 @@ const AllList = () => {
         headerContent={`Latest ${Math.min(
           20,
           list.length,
-        )}  Collections (Total of ${total})`}
+        )}  users (Total of ${total})`}
         containerStyle={{ padding: '0' }}
         pagination={{
           current: page,

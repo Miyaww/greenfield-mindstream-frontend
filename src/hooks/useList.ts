@@ -4,7 +4,6 @@ import {
   mirrorGroup,
   multiTx,
   putBucketPolicy,
-  putObjectPolicy,
 } from '../utils/gfSDK';
 import {
   ISimulateGasFee,
@@ -21,12 +20,9 @@ import { useModal } from './useModal';
 import { delay, parseGroupName } from '../utils';
 import { BSC_SEND_GAS_FEE } from '../env';
 import { OwnBuyContract } from '../base/contract/ownBuyContract';
-import { IHeadGroup } from '../utils/type';
-import { QueryHeadGroupResponse } from '@bnb-chain/greenfield-cosmos-types/greenfield/storage/query';
 
 export interface IList {
   groupName: string;
-  extra: string;
 }
 export const useList = (props: IList) => {
   //create bucket
@@ -37,7 +33,7 @@ export const useList = (props: IList) => {
   const { address, connector } = useAccount();
 
   const stateModal = useModal();
-  const { groupName, extra } = props;
+  const { groupName } = props;
   const simulateTx = useCallback(
     async (changeLoading = true) => {
       if (!address || !groupName) return {};
@@ -46,8 +42,7 @@ export const useList = (props: IList) => {
         const createGroupTx = await CreateGroup({
           creator: address as string,
           groupName: groupName,
-          members: [address as string],
-          extra,
+          extra: '',
         });
 
         const mirrorGroupTx = await mirrorGroup(
@@ -55,39 +50,23 @@ export const useList = (props: IList) => {
           '0',
           address as string,
         );
-
-        let policyTx;
-        const { name, bucketName, type } = parseGroupName(groupName);
+        const { bucketName } = parseGroupName(groupName);
 
         const statement: PermissionTypes.Statement = {
           effect: PermissionTypes.Effect.EFFECT_ALLOW,
           actions: [PermissionTypes.ActionType.ACTION_GET_OBJECT],
-          resources: [
-            GRNToString(
-              type === 'Data'
-                ? newObjectGRN(bucketName, name)
-                : newObjectGRN(bucketName, '*'),
-            ),
-          ],
+          resources: [GRNToString(newObjectGRN(bucketName, '*'))],
         };
 
         const principal = {
           type: PermissionTypes.PrincipalType.PRINCIPAL_TYPE_GNFD_GROUP,
           value: GRNToString(newGroupGRN(address as string, groupName)),
         };
-        if (type === 'Collection') {
-          policyTx = await putBucketPolicy(bucketName, {
-            operator: address,
-            statements: [statement],
-            principal,
-          });
-        } else {
-          policyTx = await putObjectPolicy(bucketName, name, {
-            operator: address,
-            statements: [statement],
-            principal,
-          });
-        }
+        const policyTx = await putBucketPolicy(bucketName, {
+          operator: address,
+          statements: [statement],
+          principal,
+        });
 
         const { simulate, broadcast } = await multiTx([
           createGroupTx,
@@ -108,7 +87,7 @@ export const useList = (props: IList) => {
       setLoading(false);
       return {};
     },
-    [groupName, extra, address],
+    [groupName, address],
   );
   const getGroupInfo = useCallback(
     async (groupName: string, address: string): Promise<any> => {
@@ -150,7 +129,6 @@ export const useList = (props: IList) => {
           });
         },
       });
-
       const count = 60;
       const t = new Array(count).fill(1);
       let hasMirror = false;
@@ -192,7 +170,7 @@ export const useList = (props: IList) => {
       type: 'OPEN_RESULT',
       result: tmp,
     });
-  }, [connector, groupName, extra, address]);
+  }, [connector, groupName, address]);
 
   const List = useCallback(
     async (obj: IList) => {

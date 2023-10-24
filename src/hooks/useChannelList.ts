@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { useAccount } from 'wagmi';
 import { getBucketList, getGroupInfoByName } from '../utils/gfSDK';
 import { getChannelName } from '../utils/string';
 import { generateGroupName } from '../utils';
@@ -27,6 +26,7 @@ export type BucketProps = {
   UpdateTxHash: string;
   groupName: string;
   groupId: number;
+  status?: number;
 };
 export const useChannelList = (address: string) => {
   const [list, setList] = useState<BucketProps[]>();
@@ -54,13 +54,20 @@ export const useChannelList = (address: string) => {
               res.map(async (item: BucketProps) => {
                 const { BucketInfo } = item;
                 const { BucketName } = BucketInfo;
+                if (BucketName.indexOf(PUBLIC_BUCKET_NAME) > -1) {
+                  setChannelType((prev) => [...prev, 'public']);
+                }
+                if (BucketName.indexOf(PRIVATE_BUCKET_NAME) > -1) {
+                  setChannelType((prev) => [...prev, 'private']);
+                }
+                setChannelType((prev) => [...new Set(prev)]);
+
                 const groupName = generateGroupName(BucketName);
                 const res = await getGroupInfoByName(
                   groupName,
                   address as string,
                 );
                 if (res) {
-                  console.log(res.id);
                   return { ...item, groupName, groupId: Number(res.id) };
                 }
               }),

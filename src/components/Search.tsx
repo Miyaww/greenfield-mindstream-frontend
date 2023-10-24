@@ -8,7 +8,7 @@ import { useDebounce } from '../hooks/useDebounce';
 import { searchKey } from '../utils/gfSDK';
 import { parseGroupNameNoType } from '../utils';
 import { multiCallFun } from '../base/contract/multiCall';
-import { MarketPlaceContract } from '../base/contract/marketPlaceContract';
+import { MindStreamContract } from '../base/contract/mindStreamContract';
 import Web3 from 'web3';
 
 const Group = (props: any) => {
@@ -65,7 +65,7 @@ const Search = (props: ISearch) => {
               const {
                 group: { id },
               } = item;
-              return MarketPlaceContract(false).methods.prices(id);
+              return MindStreamContract(false).methods.prices(id);
             }),
           );
           const list: any = res

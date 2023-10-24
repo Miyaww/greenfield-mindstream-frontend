@@ -25,21 +25,18 @@ import { useChainBalance } from '../../hooks/useChainBalance';
 import { Loader } from '../Loader';
 import { roundFun, generateGroupName, delay } from '../../utils';
 import { getDomain } from '../../utils/getDomain';
-import { debounce, isEmpty } from 'lodash-es';
+import { debounce, isEmpty, isNumber } from 'lodash-es';
 import BigNumber from 'bignumber.js';
 import { useChannelList } from '../../hooks/useChannelList';
-import { useSP } from '../../hooks/useSP';
 import { useModal } from '../../hooks/useModal';
 import {
   client,
-  getAllSps,
   selectSp,
   CreateGroup,
   getGroupInfoByName,
   mirrorGroup,
   multiTx,
   putBucketPolicy,
-  putObjectPolicy,
 } from '../../utils/gfSDK';
 import { getOffchainAuthKeys } from '../../utils/off-chain-auth';
 import { getChannelName } from '../../utils/string';
@@ -185,7 +182,6 @@ export const CreateChannelModal = (props: ListModalProps) => {
     } catch (e: any) {
       setStatus('failed');
     }
-    console.log(validateNameAndGas, status);
   }, 500);
 
   const simulateTx = useCallback(async () => {
@@ -198,10 +194,8 @@ export const CreateChannelModal = (props: ListModalProps) => {
         console.log('No offchain, please create offchain pairs first');
         return;
       }
-      console.log(offChainData, 'offChainData');
       const bucketName = getChannelName(address, GF_CHAIN_ID, type);
       setBucketName(bucketName);
-      console.log(bucketName, 'bucketName');
       // create bucket
       const createBucketTx = await client.bucket.createBucket(
         {
@@ -223,12 +217,10 @@ export const CreateChannelModal = (props: ListModalProps) => {
       );
       // create group
       const groupName = generateGroupName(bucketName);
-      console.log(groupName, 'groupName');
       setGroupName(groupName);
       const createGroupTx = await CreateGroup({
         creator: address as string,
         groupName: groupName,
-        members: [address as string],
         extra: '',
       });
       // mirror group
@@ -265,7 +257,6 @@ export const CreateChannelModal = (props: ListModalProps) => {
       });
 
       setSimulateInfo(simulateMultiTxInfo);
-      console.log(simulateMultiTxInfo, 'simulateMultiTxInfo');
       return { simulate, broadcast, simulateMultiTxInfo };
     } catch (e: any) {
       console.log('submit error', e);
@@ -275,9 +266,10 @@ export const CreateChannelModal = (props: ListModalProps) => {
   const broadcastTx = useCallback(async () => {
     if (!address || !type) return;
     let tmp = {};
+    console.log('start broadcast');
     try {
       const simulateRes = await simulateTx();
-      console.log(simulateRes, 'simulateRes');
+      // console.log(simulateRes, 'simulateRes');
       if (!simulateRes) return;
       const { broadcast, simulateMultiTxInfo } = simulateRes;
       const res = await broadcast?.({
@@ -302,18 +294,24 @@ export const CreateChannelModal = (props: ListModalProps) => {
       for (const {} of t) {
         if (!groupId) {
           const groupResult = await getGroupInfo(groupName, address as string);
-          console.log(groupResult, 'groupResult');
           groupId = groupResult?.groupInfo?.id;
+          console.log(groupId, groupResult, 'loop groupId');
+          continue;
         }
-        hasMirror = await OwnBuyContract(false)
-          .methods.exists(Number(groupId))
-          .call({ from: address });
+        if (groupId) {
+          hasMirror = await OwnBuyContract(false)
+            .methods.exists(Number(groupId))
+            .call({ from: address });
+        }
+
         console.log(hasMirror, 'hasMirror');
+
         if (hasMirror) {
           break;
         }
         await delay(1);
       }
+      console.log(res, hasMirror, 'res, hasMirror');
 
       if (res?.code === 0 && hasMirror) {
         stateModal.modalDispatch({
@@ -327,17 +325,19 @@ export const CreateChannelModal = (props: ListModalProps) => {
           description: res?.code !== 0 ? 'Mirror failed' : 'Mirror pending',
         };
       }
-      return res;
+      // return res;
     } catch (e: any) {
+      console.log(e);
       tmp = {
         variant: 'error',
         description: e.message ? e.message : 'Mirror failed',
       };
+      setLoading(false);
     }
-    stateModal.modalDispatch({
-      type: 'OPEN_RESULT',
-      result: tmp,
-    });
+    // stateModal.modalDispatch({
+    //   type: 'OPEN_RESULT',
+    //   result: tmp,
+    // });
     setLoading(false);
   }, [address, type]);
 
@@ -454,23 +454,25 @@ export const CreateChannelModal = (props: ListModalProps) => {
         </ModalBody>
         <ModalFooter>
           <HStack w="100%" spacing={20}>
-            <Button
-              w="100%"
-              variant="brand"
-              onClick={() => createChannel()}
-              disabled={disableCreateButton()}
-              justifyContent="center"
-            >
-              {loading ? (
-                <Loader
-                  style={{ width: '32px' }}
-                  size={32}
-                  minHeight={32}
-                ></Loader>
-              ) : (
-                'Create'
-              )}
-            </Button>
+            {chain && chain.id == GF_CHAIN_ID && (
+              <Button
+                w="100%"
+                variant="brand"
+                onClick={() => createChannel()}
+                disabled={disableCreateButton()}
+                justifyContent="center"
+              >
+                {loading ? (
+                  <Loader
+                    style={{ width: '32px' }}
+                    size={32}
+                    minHeight={32}
+                  ></Loader>
+                ) : (
+                  'Create'
+                )}
+              </Button>
+            )}
             {chain && chain.id !== GF_CHAIN_ID ? (
               <Button
                 width={'100%'}

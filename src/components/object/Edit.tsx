@@ -22,8 +22,10 @@ export const EditObject = () => {
   const [title, setTitle] = useState('');
   const [p] = useSearchParams();
   const bucket_name = p.get('bucketName') || '';
+  const bucket_id = p.get('bucketId') || '';
 
   const [bucketName, setBucketName] = useState(bucket_name);
+  const [bucketId, setBucketId] = useState(bucket_id);
 
   const [open, setOpen] = useState(false);
   const [file, setFile] = useState<File>();
@@ -36,7 +38,6 @@ export const EditObject = () => {
     setTitle(event.target.value);
   };
   const handleSubmit = (value: string) => {
-    console.log(value);
     const blob = new Blob([value], { type: 'text/markdown' });
     const editorFile = new File([blob], 'myFile.md', { type: 'text/markdown' });
     setFile(editorFile);
@@ -54,6 +55,10 @@ export const EditObject = () => {
           onChange={(e) => {
             if (!e) return;
             setBucketName(e.toString());
+            const id = channelList?.find(
+              (item: any) => item.BucketInfo?.BucketName === e,
+            )?.BucketInfo?.Id;
+            setBucketId(id || '');
           }}
         >
           <HStack alignItems="flex-start" spacing={24}>
@@ -89,7 +94,6 @@ export const EditObject = () => {
         height={500}
         value={value}
         onChange={(newValue) => {
-          console.log(newValue);
           setValue(newValue || '');
         }}
       />
@@ -108,7 +112,7 @@ export const EditObject = () => {
         handleOpen={() => {
           setOpen(false);
         }}
-        detail={{ bucket_name: bucketName, object_name: title, file }}
+        detail={{ bucket_name: bucketName, object_name: title, file, bucketId }}
       />
     </Container>
   );

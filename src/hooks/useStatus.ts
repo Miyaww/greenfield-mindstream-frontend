@@ -9,17 +9,25 @@ export const useStatus = (
 ) => {
   // -1 do not login
   // 0 owner
-  // 1 Waiting for purchase
-  // 2 purchase
+  // 1 login not sub
+  // 2 subscribed
   const { address } = useAccount();
-  const [status, setStatus] = useState(address ? 0 : -1);
+  const [status, setStatus] = useState(address ? 1 : -1);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (address) setStatus(0);
+    console.log(
+      groupName,
+      groupOwner,
+      member,
+      'groupName, groupOwner, member, useStatus',
+    );
+    if (!groupName) return;
+    if (address && address === groupOwner) setStatus(0);
     if (address && address !== groupOwner) {
       checkAddressInGroup(groupName, groupOwner, member)
         .then((result) => {
+          console.log(result, 'res');
           if (result) {
             setStatus(2);
           } else {
@@ -30,7 +38,7 @@ export const useStatus = (
           setLoading(false);
         });
     }
-  }, [groupName, address]);
+  }, [groupName, address, groupOwner, member]);
 
   return { loading, status };
 };

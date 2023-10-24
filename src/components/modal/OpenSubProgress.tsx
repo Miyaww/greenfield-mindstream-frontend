@@ -29,8 +29,6 @@ export const ListProcess = (props: ListProcessProps) => {
   const { switchNetwork } = useSwitchNetwork();
 
   const stateModal = useModal();
-
-  const { Approve } = useApprove();
   const { chain } = useNetwork();
 
   const [status, setStatus] = useState(0);
@@ -223,6 +221,7 @@ export const ListProcess = (props: ListProcessProps) => {
               onClick={async () => {
                 setLoading(true);
                 setTitle('Wait for Approve');
+                //todo pass tokenid to get approve
                 // await Approve();
                 setHasRole(true);
                 setLoading(false);

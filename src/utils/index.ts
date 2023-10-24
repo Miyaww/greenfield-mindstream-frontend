@@ -68,6 +68,7 @@ export const removeTrailingZero = (str: string) => {
  * divide BN with 10^n
  * for example:
  * divide10Exp(123456789, 3) => 123456.789
+ *  divide10Exp(1, -2) => 100
  * @param origin
  * @param pow
  */
@@ -76,9 +77,9 @@ export const divide10Exp = (origin: BN, pow: number) => {
   if (origin.eq(ZERO)) {
     return '0';
   }
-  const divisor = new BN(10).pow(new BN(pow));
+  const divisor = new BN(10).pow(new BN(Math.abs(pow)));
   if (origin.lt(divisor)) {
-    const str = origin.toString(10, pow);
+    const str = origin.toString(10, Math.abs(pow));
     return '0.' + removeTrailingZero(str);
   } else {
     const mod = origin.mod(divisor);
@@ -86,7 +87,9 @@ export const divide10Exp = (origin: BN, pow: number) => {
     if (mod.eq(ZERO)) {
       return intPartStr;
     } else {
-      return intPartStr + '.' + removeTrailingZero(mod.toString(10, pow));
+      return (
+        intPartStr + '.' + removeTrailingZero(mod.toString(10, Math.abs(pow)))
+      );
     }
   }
 };
