@@ -147,6 +147,7 @@ export const getOffchainAuthKeys = async (address: string, provider: any) => {
   const domain = getDomain();
 
   if (storageResStr) {
+    console.log('storageResStr', storageResStr);
     const storageRes = JSON.parse(
       storageResStr,
     ) as IReturnOffChainAuthKeyPairAndUpload;
@@ -155,9 +156,9 @@ export const getOffchainAuthKeys = async (address: string, provider: any) => {
       toast.info({
         description: 'Your auth key has expired, please generate a new one',
       });
-      // return;
+      return;
     }
-    // return storageRes;
+    return storageRes;
   }
 
   const allSps = await getAllSps();

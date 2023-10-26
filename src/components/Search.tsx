@@ -50,7 +50,7 @@ const Search = (props: ISearch) => {
         setList([searchValue as never]);
       } else {
         const result: any = await searchKey(searchValue);
-        let { groups } = result;
+        let { Groups: groups } = result;
         groups = groups.filter((item: any) => {
           const {
             group: { group_name },
@@ -100,18 +100,6 @@ const Search = (props: ISearch) => {
   };
   const filteredData = useMemo(() => {
     if (searchValue) {
-      const collectionList = {
-        title: 'Collection',
-        list: [],
-        render,
-        link,
-      };
-      const dataList = {
-        title: 'Data',
-        list: [],
-        render,
-        link,
-      };
       const addressList = {
         title: 'Address',
         list: [],
@@ -129,16 +117,9 @@ const Search = (props: ISearch) => {
           const {
             group: { group_name },
           } = d;
-          // const { type } = parseGroupNameNoType(group_name);
-          // if (type === 'Collection') {
-          //   collectionList.list.push(d as never);
-          // }
-          // if (type === 'Data') {
-          //   dataList.list.push(d as never);
-          // }
         }
       });
-      return [collectionList, dataList, addressList];
+      return [addressList];
     }
     return [{ title: '', list: [], render: () => <></>, link: () => '12' }];
   }, [list]);
@@ -177,7 +158,7 @@ const Search = (props: ISearch) => {
           boxShadow="4px 2px 8px rgba(0, 0, 0, 0.08)"
         >
           <Input
-            placeholder={'Search Data Names, Accounts'}
+            placeholder={'Search Address'}
             value={searchValue}
             onChange={handleSearchChange}
             onConfirm={handleSearchChange}

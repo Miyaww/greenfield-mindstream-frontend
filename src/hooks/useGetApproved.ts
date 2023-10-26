@@ -30,7 +30,7 @@ export const useGetApproved = () => {
           setLoading(false);
         });
     }
-  }, [address]);
+  }, [address, groupId]);
 
   return { hasRole, setHasRole, loading };
 };

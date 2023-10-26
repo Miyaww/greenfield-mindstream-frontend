@@ -12,6 +12,7 @@ import { useGetApproved } from '../hooks/useGetApproved';
 import { useChannelList, BucketProps } from '../hooks/useChannelList';
 import { useUserSetting } from '../hooks/useUserSetting';
 import { useApprove } from '../hooks/useApprove';
+import { useProfile } from '../hooks/useProfile';
 
 import { CreateChannelModal } from '../components/modal/CreateChannelModal';
 import { OpenSubModal } from './modal/OpenUpSubModal';
@@ -19,10 +20,10 @@ import { SubscribeModal } from './modal/SubscribeModal';
 
 export const ChannelActionCom = () => {
   const { address } = useAccount();
-  const { isConnected, isConnecting } = useAccount();
   const { hasOpenUpSub } = useUserSetting();
   const [p] = useSearchParams();
   const tab = p.getAll('tab')[0];
+  const { profile } = useProfile();
 
   const modalData = useModal();
   const { activeGroup } = modalData.modalState;
@@ -38,7 +39,7 @@ export const ChannelActionCom = () => {
   const [openUpSub, setOpenCharge] = useState(false);
   const [openSub, setOpenSub] = useState(false);
 
-  const { hasRole, setHasRole, loading: roleLoading } = useGetApproved();
+  const { hasRole, loading: roleLoading } = useGetApproved();
 
   useEffect(() => {
     if (!listLoading && !list) return;
@@ -90,6 +91,10 @@ export const ChannelActionCom = () => {
             <Button
               size={'md'}
               onClick={() => {
+                if (!profile?.name) {
+                  modalData.modalDispatch({ type: 'OPEN_PROFILE' });
+                  return;
+                }
                 setOpen(true);
               }}
             >
@@ -98,7 +103,11 @@ export const ChannelActionCom = () => {
           )}
 
         {ownerAddress === address && tab === 'private' && (
-          <Button size={'md'} onClick={() => handleCheckRole()}>
+          <Button
+            size={'md'}
+            onClick={() => handleCheckRole()}
+            disabled={roleLoading}
+          >
             {hasOpenUpSub ? 'Set Price' : 'Open Up Subscribe'}
             {approveLoading && (
               <Loader

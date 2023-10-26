@@ -319,6 +319,10 @@ export const CreateChannelModal = (props: ListModalProps) => {
           initListStatus: 1,
           initListResult: res,
         });
+        stateModal.modalDispatch({
+          type: 'SET_ACTIVE_GROUP',
+          activeGroup: { groupName, groupId, ownerAddress: address },
+        });
       } else {
         tmp = {
           variant: res?.code !== 0 ? 'error' : 'success',

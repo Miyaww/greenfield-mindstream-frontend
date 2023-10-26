@@ -248,13 +248,19 @@ export const searchKey = async (key: string) => {
   const client = await getClient();
 
   try {
-    return await client.sp.listGroups({
+    const res = await client.sp.listGroups({
       name: key,
-      prefix: `${DAPP_NAME}_`,
+      prefix: '',
+      // prefix: `${DAPP_NAME}_`,
       sourceType: 'SOURCE_TYPE_ORIGIN',
       limit: 1000,
       offset: 0,
     });
+
+    if (res.code === 0 && res.body) {
+      const { GfSpGetGroupListResponse } = res.body;
+      return GfSpGetGroupListResponse;
+    }
   } catch (e) {
     return [];
   }

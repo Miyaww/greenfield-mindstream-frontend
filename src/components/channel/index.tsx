@@ -35,8 +35,6 @@ export const Channel = () => {
   const tab = p.getAll('tab')[0];
   const currentTab = tab ? tab : Type.Public;
   const ownerAddress = p.getAll('address')[0] || realAddress;
-  // const groupName = p.getAll('groupName')[0];
-  // const groupId = p.getAll('groupId')[0];
   const [filterdNavItems, setFilterdNavItems] = useState(navItems);
 
   const { list, loading: listLoading } = useChannelList(ownerAddress as string);
@@ -50,7 +48,7 @@ export const Channel = () => {
   }, [list, listLoading]);
   useEffect(() => {
     if (!listLoading && !list) return;
-    if (groupId === 'undefined' || !groupId) {
+    if (!groupId || groupId === 'undefined') {
       const currentChannel = list?.filter((item) => {
         return item.BucketInfo.BucketName.includes(tab);
       });
@@ -65,11 +63,12 @@ export const Channel = () => {
   }, [list, listLoading, tab, groupId, ownerAddress]);
   const handleTabChange = useCallback(
     (tab: any) => {
+      console.log('handleTbaChange', tab);
       navigator(
         `/channelList?tab=${tab}&address=${ownerAddress}&groupName=${groupName}&groupId=${groupId}`,
       );
     },
-    [groupName, groupId, ownerAddress],
+    [ownerAddress, activeGroup],
   );
 
   return (

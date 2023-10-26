@@ -37,9 +37,7 @@ import Logo from '../../images/logo.png';
 import { BSCLogo } from '../svgIcon/BSCLogo';
 import { BSC_CHAIN_ID, GF_CHAIN_ID } from '../../env';
 import Search from '../../components/Search';
-import { ProfileModal } from '../modal/ProfileModal';
 import { useModal } from '../../hooks/useModal';
-import { useProfile } from '../../hooks/useProfile';
 
 const CustomMenuButton = forwardRef(
   (props: { children: ReactNode }, ref: ForwardedRef<HTMLButtonElement>) => {
@@ -83,13 +81,12 @@ const Header = () => {
   const { address, isConnecting, isConnected } = useAccount();
   const { disconnect } = useDisconnect();
   const { handleModalOpen } = useWalletModal();
-  const { profile } = useProfile();
   const handleShowDropDown = useCallback(() => {
     setDropDownOpen((preState) => !preState);
   }, []);
   const ref = useRef(null);
   const modalData = useModal();
-  const { openEditProfile } = modalData.modalState;
+
   useOutsideClick({
     ref,
     handler: () => {
@@ -100,12 +97,6 @@ const Header = () => {
       }
     },
   });
-
-  // const { revoke } = useRevoke();
-  // const { hasRole, setHasRole } = useHasRole();
-  const handleEditProfileOpen = useCallback(() => {
-    modalData.modalDispatch({ type: 'CLOSE_PROFILE' });
-  }, []);
   const navigate = useNavigate();
   const { onClose, onToggle } = useDisclosure();
   const { switchNetwork } = useSwitchNetwork();
@@ -119,7 +110,7 @@ const Header = () => {
       padding={'0px 24px 0'}
       height={80}
     >
-      <LeftCon gap={42} alignItems={'center'}>
+      <LeftCon gap={24} alignItems={'center'}>
         <img
           onClick={() => {
             navigate('/');
@@ -127,7 +118,14 @@ const Header = () => {
           src={Logo}
           alt="logo"
         />
-        <Box>BNB Greenfield Mindstream</Box>
+        <Box
+          cursor="pointer"
+          onClick={() => {
+            navigate('/');
+          }}
+        >
+          BNB Greenfield Mindstream
+        </Box>
         <Search width="380px" height="40px"></Search>
       </LeftCon>
 
@@ -136,6 +134,14 @@ const Header = () => {
           <>
             <Button
               onClick={() => {
+                modalData.modalDispatch({
+                  type: 'SET_ACTIVE_GROUP',
+                  activeGroup: {
+                    groupName: '',
+                    groupId: '',
+                    ownerAddress: address,
+                  },
+                });
                 navigate(`/channelList?tab=public&address=${address}`);
               }}
               variant="text"
@@ -236,23 +242,20 @@ const Header = () => {
                 <MenuElement
                   onClick={async (e: React.MouseEvent<HTMLElement>) => {
                     e.preventDefault();
+                    modalData.modalDispatch({
+                      type: 'SET_ACTIVE_GROUP',
+                      activeGroup: {
+                        groupName: '',
+                        groupId: '',
+                        ownerAddress: address,
+                      },
+                    });
                     navigate(`/channelList?tab=public&address=${address}`);
                   }}
                 >
                   <DepositIcon mr={8} width={24} height={24} />
                   My Channels
                 </MenuElement>
-                {/* {hasRole && (
-                          <MenuElement
-                            onClick={() => {
-                              revoke().then(() => {
-                                setHasRole(true);
-                              });
-                            }}
-                          >
-                            <WalletIcon mr={8} width={24} height={24} /> Revoke
-                          </MenuElement>
-                        )} */}
                 <Disconnect
                   onClick={async () => {
                     await disconnect();
@@ -271,15 +274,6 @@ const Header = () => {
           )}
         </ButtonWrapper>
       </RightFunCon>
-      {address && (
-        <ProfileModal
-          isOpen={openEditProfile}
-          handleOpen={() => {
-            handleEditProfileOpen();
-          }}
-          detail={profile}
-        />
-      )}
     </HeaderFlex>
   );
 };

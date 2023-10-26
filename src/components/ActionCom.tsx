@@ -77,7 +77,7 @@ export const ActionCom = (obj: IActionCom) => {
       )}
       {status == 2 && (
         <Badge ml={12} colorScheme="success">
-          Subscribe
+          Subscribed
         </Badge>
       )}
     </ButtonCon>

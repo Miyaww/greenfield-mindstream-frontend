@@ -5,7 +5,7 @@ import styled from '@emotion/styled';
 import { Button, Flex, Badge } from '@totejs/uikit';
 import { useWalletModal } from '../hooks/useWalletModal';
 import { useNavigate } from 'react-router-dom';
-import { IGroupItem, ObjectInfo } from '../base/type';
+import { ObjectInfo } from '../base/type';
 
 interface IActionCom {
   data: ObjectInfo;

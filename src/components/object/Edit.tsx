@@ -47,7 +47,11 @@ export const EditObject = () => {
       <Title>Write Blog</Title>
       <Subtitle>Channel:</Subtitle>
       {bucket_name ? (
-        <Box>{bucket_name}</Box>
+        <Box>
+          {bucket_name.includes('public')
+            ? 'Public Channel'
+            : 'Private Channel'}
+        </Box>
       ) : (
         <RadioGroup
           mb={24}
@@ -66,10 +70,17 @@ export const EditObject = () => {
               channelList?.map((item: any) => {
                 return (
                   <Radio
+                    sx={{
+                      span: {
+                        borderColor: 'readable.normal',
+                      },
+                    }}
                     key={item.BucketInfo?.BucketName}
                     value={item.BucketInfo?.BucketName}
                   >
-                    {item.BucketInfo?.BucketName}
+                    {item.BucketInfo?.BucketName.includes('public')
+                      ? 'Public Channel'
+                      : 'Private Channel'}
                   </Radio>
                 );
               })}
@@ -100,6 +111,7 @@ export const EditObject = () => {
       <Button
         w="fit-content"
         mt="40"
+        disabled={!title || !bucketName}
         onClick={() => {
           handleSubmit(value);
           setOpen(true);
@@ -112,7 +124,13 @@ export const EditObject = () => {
         handleOpen={() => {
           setOpen(false);
         }}
-        detail={{ bucket_name: bucketName, object_name: title, file, bucketId }}
+        detail={{
+          bucket_name: bucketName,
+          object_name: title,
+          file,
+          bucketId,
+          address,
+        }}
       />
     </Container>
   );

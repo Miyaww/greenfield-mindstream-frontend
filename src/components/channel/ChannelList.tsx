@@ -1,3 +1,4 @@
+//deprecated
 import styled from '@emotion/styled';
 import {
   Link as UILink,
@@ -46,7 +47,7 @@ const ChannelList = () => {
   const [expiration, setExpiration] = useState<string>('');
 
   const { Approve } = useApprove();
-  const { hasRole, setHasRole, loading: roleLoading } = useHasRole();
+  const { hasRole, loading: roleLoading } = useHasRole();
   // -1 do not login
   // 0 owner
   // 1 Waiting for purchase
@@ -105,7 +106,7 @@ const ChannelList = () => {
 
   useAsyncEffect(async () => {
     if (list) {
-      console.log(list);
+      console.log(list, 'channel list');
       const updatedList = await Promise.all(
         list.map(async (item) => {
           const { groupId, groupName } = item;

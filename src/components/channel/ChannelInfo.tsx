@@ -1,18 +1,10 @@
 import { useChannelInfo } from '../../hooks/useChannelInfo';
-import { useState, useEffect, useMemo } from 'react';
-import {
-  Table,
-  Box,
-  Link as UILink,
-  Flex,
-  Breadcrumb,
-  BreadcrumbItem,
-  Button,
-} from '@totejs/uikit';
+import { useState, useEffect } from 'react';
+import { Table, Box, Flex, Button } from '@totejs/uikit';
 import styled from '@emotion/styled';
 import { useAccount } from 'wagmi';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { contentTypeToExtension, encodeObjectName } from '../../utils';
+import { contentTypeToExtension } from '../../utils';
 import { NoData } from '../../components/NoData';
 import { FileActionCom } from '../../components/FileActionCom';
 import dayjs from 'dayjs';
@@ -20,6 +12,8 @@ import utc from 'dayjs/plugin/utc';
 import { useStatus } from '../../hooks/useStatus';
 import { useModal } from '../../hooks/useModal';
 import { Loader } from '../../components/Loader';
+import { trimLongStr } from '../../utils';
+import { Copy } from '../../components/Copy';
 
 dayjs.extend(utc);
 enum Type {
@@ -33,16 +27,24 @@ export const ChannelInfo = () => {
   const [p] = useSearchParams();
   const navigate = useNavigate();
   const tab = p.getAll('tab')[0];
-  const type = tab ? tab : Type.Public;
+  const type = tab ? tab : Type.Private;
   const modalData = useModal();
   const activeGroup = modalData.modalState.activeGroup;
+  console.log(activeGroup, 'channelInfo');
   const [objectList, setObjList] = useState<any>([]);
   const { groupName, groupId, ownerAddress } = activeGroup;
-  // const { bucketId, bucketName } = props;
   const { publicObjList, privateObjList, fetchChannelInfo, loading } =
     useChannelInfo();
 
   const { status } = useStatus(groupName, ownerAddress, address as string);
+  useEffect(() => {
+    if (ownerAddress === address) {
+      navigate(
+        `/channelList?tab=${type}&address=${ownerAddress}&groupName=${groupName}&groupId=${groupId}`,
+      );
+    }
+  }, [groupName, groupId, address, ownerAddress]);
+
   useEffect(() => {
     fetchChannelInfo();
   }, [type, address, ownerAddress]);
@@ -69,21 +71,21 @@ export const ChannelInfo = () => {
 
   const columns = [
     {
-      header: 'File',
+      header: 'Blog Title',
       cell: (data: any) => {
         return <Box>{data.ObjectName}</Box>;
       },
     },
-    {
-      header: 'File Type',
-      cell: (data: any) => {
-        return (
-          <Box>
-            {data.ContentType ? contentTypeToExtension(data.ContentType) : '--'}
-          </Box>
-        );
-      },
-    },
+    // {
+    //   header: 'File Type',
+    //   cell: (data: any) => {
+    //     return (
+    //       <Box>
+    //         {data.ContentType ? contentTypeToExtension(data.ContentType) : '--'}
+    //       </Box>
+    //     );
+    //   },
+    // },
     {
       header: 'Create Time',
       cell: (data: any) => {
@@ -148,6 +150,10 @@ export const ChannelInfo = () => {
   return (
     <>
       <Container>
+        <Info gap={16} alignItems={'center'}>
+          <Address>{trimLongStr(ownerAddress as string)}</Address>
+          {ownerAddress === address && <Copy value={address} />}
+        </Info>
         {loading ? (
           <Loader />
         ) : tableData && tableData?.length ? (
@@ -205,13 +211,20 @@ const NoDataTitle = styled.div`
 const NoDataSub = styled.div`
   font-size: 20px;
 `;
-const MyBreadcrumb = styled(Breadcrumb)`
-  font-style: normal;
-  font-weight: 400;
-  font-size: 16px;
-  line-height: 18px;
-
-  color: #ffffff;
+const PersonInfo = styled(Flex)`
+  width: 100%;
+  justify-content: space-between;
+  align-items: center;
 `;
 
-const MyBreadcrumbItem = styled(BreadcrumbItem)``;
+const Info = styled(Flex)`
+  width: '100%';
+  margin-bottom: 16px;
+`;
+
+const Address = styled.span`
+  font-style: normal;
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 24px;
+`;

@@ -14,15 +14,20 @@ import { useWalletModal } from '../../hooks/useWalletModal';
 import { WalletConnectModal } from '../wallet/WalletConnectModal';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAccount } from 'wagmi';
+import { ProfileModal } from '../modal/ProfileModal';
+import { useProfile } from '../../hooks/useProfile';
 
 export default function Layout({ children }: { children: ReactNode }) {
   const modalData = useModal();
   const { modalData: walletModalData, handleModalClose } = useWalletModal();
   const walletModalOpen = walletModalData.modalState?.open;
-  const [p] = useSearchParams();
-  const { isConnected, isConnecting } = useAccount();
+  const { isConnected, isConnecting, address } = useAccount();
   const navigator = useNavigate();
-
+  const { profile } = useProfile();
+  const { openEditProfile } = modalData.modalState;
+  const handleEditProfileOpen = useCallback(() => {
+    modalData.modalDispatch({ type: 'CLOSE_PROFILE' });
+  }, []);
   const {
     openList,
     initInfo,
@@ -37,17 +42,6 @@ export default function Layout({ children }: { children: ReactNode }) {
       navigator('/');
     }
   }, [isConnected, isConnecting]);
-
-  // useEffect(() => {
-  //   console.log('SET_ACTIVE_GROUP');
-  //   const groupId = p.get('groupId');
-  //   const groupName = p.get('groupName');
-  //   const ownerAddress = p.get('address');
-  //   modalData.modalDispatch({
-  //     type: 'SET_ACTIVE_GROUP',
-  //     activeGroup: { groupId, groupName, ownerAddress },
-  //   });
-  // }, []);
 
   const handleListOpen = useCallback(() => {
     modalData.modalDispatch({ type: 'CLOSE_LIST' });
@@ -119,6 +113,15 @@ export default function Layout({ children }: { children: ReactNode }) {
           handleModalClose();
         }}
       />
+      {address && (
+        <ProfileModal
+          isOpen={openEditProfile}
+          handleOpen={() => {
+            handleEditProfileOpen();
+          }}
+          detail={profile}
+        />
+      )}
     </>
   );
 }

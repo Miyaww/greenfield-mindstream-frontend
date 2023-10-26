@@ -2,20 +2,9 @@ import styled from '@emotion/styled';
 import { Flex, Table } from '@totejs/uikit';
 import { usePagination } from '../../hooks/usePagination';
 import { Link, useNavigate } from 'react-router-dom';
-import {
-  formatDateUTC,
-  trimLongStr,
-  divide10Exp,
-  defaultImg,
-  contentTypeToExtension,
-} from '../../utils';
+import { trimLongStr, defaultImg } from '../../utils';
 import { useGetListed } from '../../hooks/useGetListed';
-import BN from 'bn.js';
 import { useAccount } from 'wagmi';
-import { useSalesVolume } from '../../hooks/useSalesVolume';
-import { useGlobal } from '../../hooks/useGlobal';
-import { CollectionLogo } from '../svgIcon/CollectionLogo';
-import { ActionCom } from '../ActionCom';
 
 interface ITotalVol {
   id: string;
@@ -24,6 +13,7 @@ const AllList = () => {
   const { handlePageChange, page } = usePagination();
   const { address: realAddress } = useAccount();
   const { list, loading, total } = useGetListed(realAddress, page, 10);
+  const navigate = useNavigate();
   console.log(list);
   const handleFollow = (owner: string) => {
     const followList = localStorage.getItem('followList') || '';
@@ -41,6 +31,9 @@ const AllList = () => {
             alignItems={'center'}
             justifyContent={'flex-start'}
             gap={6}
+            onClick={() => {
+              navigate(`/channelList?tab=public&address=${address}`);
+            }}
           >
             <ImgCon src={avatar || defaultImg(name, 40)}></ImgCon>
             {trimLongStr(address, 15)}
@@ -63,14 +56,6 @@ const AllList = () => {
         return <div>{bio}</div>;
       },
     },
-    // {
-    //   header: 'Address',
-    //   width: 120,
-    //   cell: (data: any) => {
-    //     const { address } = data;
-    //     return <div>{trimLongStr(address)}</div>;
-    //   },
-    // },
   ];
   return (
     <Container>
@@ -112,8 +97,4 @@ const ImgCon = styled.img`
 
   background: #d9d9d9;
   border-radius: 8px;
-`;
-
-const MyLink = styled(Link)`
-  color: ${(props: any) => props.theme.colors.scene.primary.normal};
 `;

@@ -69,6 +69,7 @@ export const useUpload = () => {
         const simulateInfo = await createObjectTx.simulate({
           denom: 'BNB',
         });
+        console.log(simulateInfo, 'simulateInfo upload');
         setSimulateInfo(simulateInfo);
         setSimloading(false);
         return { simulateInfo, createObjectTx, offChainData };

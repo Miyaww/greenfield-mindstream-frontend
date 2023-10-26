@@ -23,12 +23,12 @@ interface UploadModalProps {
   handleOpen: (show: boolean) => void;
   detail: any;
 }
+const DEFAULT_GAS_FEE = '0.000006';
 
 export const UploadModal = (props: UploadModalProps) => {
   const { isOpen, handleOpen, detail } = props;
-  const { pending, handleUploadFile, simulateInfo, simulateTx, simloading } =
-    useUpload();
-  const { bucket_name, object_name, file, bucketId } = detail;
+  const { pending, handleUploadFile, simloading } = useUpload();
+  const { bucket_name, object_name, file, bucketId, address } = detail;
   const fileName = object_name;
   const channelType = bucket_name.includes('public') ? 'public' : 'private';
 
@@ -64,7 +64,7 @@ export const UploadModal = (props: UploadModalProps) => {
         <Box h={10}></Box>
         <InfoCon gap={26} justifyContent={'center'} alignItems={'center'}>
           <BaseInfo flexDirection={'column'} alignItems={'flex-start'}>
-            <ItemSubTittle>File Name</ItemSubTittle>
+            <ItemSubTittle>Blog Title</ItemSubTittle>
             {fileName && (
               <ResourceNameCon alignItems={'center'}>
                 {fileName}
@@ -100,7 +100,7 @@ export const UploadModal = (props: UploadModalProps) => {
                 ></Loader>
               ) : (
                 <BalanceCon flexDirection={'column'} alignItems={'flex-end'}>
-                  <Fee>{simulateInfo?.gasFee} BNB</Fee>
+                  <Fee>{DEFAULT_GAS_FEE} BNB</Fee>
                   {GF_FEE_SUFF ? (
                     <Balance>
                       Greenfield Balance: {roundFun(GfBalanceVal, 8)} BNB{' '}
@@ -139,6 +139,17 @@ export const UploadModal = (props: UploadModalProps) => {
                         },
                       });
                     }, 300);
+                    navigate(
+                      `/channelList?tab=${channelType}&address=${address}`,
+                      {
+                        state: {
+                          fileTitle: fileName,
+                          owner: address,
+                          channel: bucket_name,
+                          isPrivate: channelType === 'private',
+                        },
+                      },
+                    );
                   }
                 }
               }}
@@ -228,6 +239,7 @@ const Fee = styled.div`
   font-weight: 400;
   font-size: 12px;
   line-height: 18px;
+  color: #696a6c;
 `;
 
 const Balance = styled.div`

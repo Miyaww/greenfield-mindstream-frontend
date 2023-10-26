@@ -16,7 +16,6 @@ import { BSC_CHAIN_ID, LIST_ESTIMATE_FEE_ON_BSC } from '../../env';
 import { useChainBalance } from '../../hooks/useChainBalance';
 import { defaultImg, roundFun } from '../../utils';
 import { useProfile } from '../../hooks/useProfile';
-import Logo from '../../images/logo.png';
 import { useDebounce } from '../../hooks/useDebounce';
 
 interface ListModalProps {

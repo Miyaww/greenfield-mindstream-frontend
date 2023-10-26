@@ -1,5 +1,5 @@
 import { get } from '../../base/http';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { useLocation, useSearchParams } from 'react-router-dom';
 import { Flex, Box, Image, Divider } from '@totejs/uikit';
@@ -7,7 +7,6 @@ import { useProfile } from '../../hooks/useProfile';
 import { useChannelInfo } from '../../hooks/useChannelInfo';
 import { useStatus } from '../../hooks/useStatus';
 import { convertUnixTimeStampToDate } from '../../utils/time';
-import { useSubscribe } from '../../hooks/useSubscribe';
 
 import { useAsyncEffect } from 'ahooks';
 import { useAccount } from 'wagmi';
@@ -31,13 +30,16 @@ export const FileInfo = () => {
   const lastIndex = fileTitle.lastIndexOf('-');
   const title = fileTitle.substring(0, lastIndex);
   const [noPermission, setNoPermission] = useState<boolean>(false);
+  const channelType = useMemo(() => {
+    return channel.includes('public') ? 'public' : 'private';
+  }, [channel]);
   // const { subscribe } = useSubscribe(channel, owner);
 
   useAsyncEffect(async () => {
     if (!owner) return;
     const res = await getProfile(owner);
-    setProfile(res);
-  }, [owner]);
+    setProfile({ name: res._name, avatar: res._avatar });
+  }, []);
   useEffect(() => {
     const followList = localStorage.getItem('followList') || '';
     if (followList.includes(owner)) {
@@ -71,7 +73,7 @@ export const FileInfo = () => {
     fetchData();
   }, [status, owner, groupName]);
   const handleFollow = () => {
-    const followList = localStorage.getItem('followList') || '';
+    const followList = localStorage.getItem(`followList_${address}`) || '';
     localStorage.setItem('followList', followList + ',' + owner);
     setFollowed(true);
   };
@@ -82,40 +84,41 @@ export const FileInfo = () => {
         {title}
       </Box>
       {profile && (
-        <Flex>
+        <Flex alignItems={'center'}>
           <Image src={profile.avatar} w={50} h={50} borderRadius={50}></Image>
-          <Box ml={9}>
+          <Box ml={16}>
             <Flex alignItems={'flex-end'}>
               <Box fontSize={24} lineHeight={'32px'}>
                 {profile.name}
               </Box>
-              {followed ? (
-                <Box
-                  ml={18}
-                  lineHeight={'32px'}
-                  color="scene.success.active"
-                  fontSize={16}
-                >
-                  Followed
-                </Box>
-              ) : (
-                <Box
-                  ml={18}
-                  lineHeight={'32px'}
-                  color="scene.primary.normal"
-                  onClick={() => handleFollow()}
-                  _hover={{ cursor: 'pointer' }}
-                  fontSize={16}
-                >
-                  Follow
-                </Box>
-              )}
+              {owner !== address &&
+                (followed ? (
+                  <Box
+                    ml={18}
+                    lineHeight={'32px'}
+                    color="scene.success.active"
+                    fontSize={16}
+                  >
+                    Followed
+                  </Box>
+                ) : (
+                  <Box
+                    ml={18}
+                    lineHeight={'32px'}
+                    color="scene.primary.normal"
+                    onClick={() => handleFollow()}
+                    _hover={{ cursor: 'pointer' }}
+                    fontSize={16}
+                  >
+                    Follow
+                  </Box>
+                ))}
             </Flex>
             <Box fontSize={16}>{convertUnixTimeStampToDate(createAt)}</Box>
           </Box>
         </Flex>
       )}
-      <Divider my={20} />
+      <Divider my={12} />
       <Flex>
         <Box
           color={'#B9B9BB'}
@@ -126,10 +129,12 @@ export const FileInfo = () => {
             },
           }}
         >
-          Published in <span>{channel}</span> Channel
+          Published in{' '}
+          <span>{owner === address ? `your ${channelType}` : channel}</span>{' '}
+          channel
         </Box>
       </Flex>
-      <Divider my={20} />
+      <Divider my={12} />
       {noPermission ? (
         <Box>Please subscribe to view this file</Box>
       ) : (

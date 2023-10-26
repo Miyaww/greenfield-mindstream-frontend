@@ -40,9 +40,9 @@ interface SubModalProps {
   type: 'OPEN_UP' | 'SET_PRICE';
 }
 interface PriceData {
-  month: number;
-  threeMonths: number;
-  year: number;
+  month: number | '';
+  threeMonths: number | '';
+  year: number | '';
 }
 
 export const OpenSubModal = (props: SubModalProps) => {
@@ -62,9 +62,9 @@ export const OpenSubModal = (props: SubModalProps) => {
   const { address } = useAccount();
 
   const [prices, setPrices] = useState<PriceData>({
-    month: 0,
-    threeMonths: 0,
-    year: 0,
+    month: '',
+    threeMonths: '',
+    year: '',
   });
   useEffect(() => {
     if (userSettingLoading) return;
@@ -144,9 +144,9 @@ export const OpenSubModal = (props: SubModalProps) => {
   const reset = useCallback(() => {
     handleOpen(false);
     setPrices({
-      month: 0,
-      threeMonths: 0,
-      year: 0,
+      month: '',
+      threeMonths: '',
+      year: '',
     });
     setError('');
   }, []);
@@ -163,11 +163,10 @@ export const OpenSubModal = (props: SubModalProps) => {
       <ModalCloseButton />
       <Header>{type === 'OPEN_UP' ? 'Open Up Subscribe' : 'Set Price'}</Header>
       <CustomBody>
-        <Box h={10}></Box>
-        <ItemTittle alignItems={'center'} justifyContent={'space-between'}>
+        {/* <Box h={10}></Box> */}
+        {/* <ItemTittle alignItems={'center'} justifyContent={'space-between'}>
           Channel Name
-          {/* <span>{bucketName}</span> */}
-        </ItemTittle>
+        </ItemTittle> */}
         <FormControl my={24} isInvalid={error?.length > 0}>
           <LightMode>
             <Flex alignItems={'center'}>
